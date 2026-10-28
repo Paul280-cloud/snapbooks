@@ -795,3 +795,206 @@ The React app runs in the browser and talks to Supabase using the Supabase JavaS
 | SUPABASE_SERVICE_ROLE_KEY | Admin key for seed script only | Same | Secret: never in the browser app |
 
 ### 11.6 Folder structure
+
+### 11.7 Testing plan
+- All T- criteria tested manually on a real browser using the checklist in MASTER.md.
+- BR1, BR4, BR5 and BR7 get Jest unit tests.
+- Test accounts are from Section 10.4.
+
+**5-minute demo script:**
+1. Log in as zanele.d@example.com and show S5 Receipt List with existing receipts.
+2. Upload a new receipt photo; confirm details in M1; save.
+3. Filter the list by category "Fuel".
+4. Open one receipt, edit the amount, save.
+5. Open S8 Export, set the tax-year date range, download the .xlsx and open it.
+6. Open S9 Dashboard and show the category bar chart.
+
+---
+
+## 12. Quality, errors, security and privacy
+
+### 12.1 Quality requirements
+
+| Area | Requirement |
+|---|---|
+| Speed | Every screen shows content or a loading placeholder within 3 seconds on mobile data, tested on a real phone |
+| Data usage | Photos stored as-is (under 10 MB); list loads 20 at a time; no auto-playing video |
+| Offline | Receipt list visible (cached); upload, save, delete and export disabled; banner shown |
+| Devices | Latest Chrome, Edge and Safari; screens from 360px wide |
+| Language and region | English (South Africa); dates as 12 Mar 2026; currency as R 149.00; SAST |
+| Accessibility | As in Section 9.4 |
+| Scale | Works for up to 200 users and 100 000 receipts in the first semester |
+| Abuse limits | BR4: max 500 receipts per account |
+
+### 12.2 Error messages
+
+| Situation | Exact message | What happens next |
+|---|---|---|
+| No internet | "You're offline. Changes will not be saved." | Save, upload, delete and export disabled |
+| Server or unknown error | "Something went wrong. Try again." | "Try again" button |
+| Login expired | "Please log in again." | User taken to S3; unsaved edits are lost |
+| Not allowed | "You don't have permission to do that." | Nothing saved; user stays on current screen |
+| Form field error | Red border + message under the field | Field keeps the user's text |
+| Upload failed | "Upload failed. Check your connection." | "Try again" button; photo and fields kept on S6 |
+| File type or size wrong | "This file can't be used. Choose a JPG, PNG or WebP under 10 MB." | File not uploaded; user stays on S6 |
+| Export range empty | "No receipts in that range. Adjust the dates and try again." | No file downloaded; user stays on S8 |
+
+### 12.3 Security
+- Passwords are handled only by Supabase Auth; the app never stores or sees a password.
+- SUPABASE_SERVICE_ROLE_KEY is never included in the browser app or pushed to GitHub.
+- Every rule in 11.4 is enforced by Supabase Row-Level Security, not only hidden on screen.
+- Receipt photos are stored in a private Supabase Storage bucket; each user can only access files in their own folder.
+
+### 12.4 Privacy and POPIA
+
+| Personal information | Why you need it | Who can see it | Where stored | How long | How to delete |
+|---|---|---|---|---|---|
+| Email address | Account login and verification | User and admin only | Supabase Auth (EU West region) | Until account deleted | S10 → M3 |
+| Display name | Personalise the interface | User only | Supabase PostgreSQL (EU West) | Until changed or account deleted | S10 → M3 |
+| Receipt photos | Core product feature | User only | Supabase Storage (EU West) | Until receipt or account deleted | S7 or M3 |
+| Receipt data (vendor, amount, date, category) | Core product feature | User only | Supabase PostgreSQL (EU West) | Until receipt or account deleted | S7 or M3 |
+
+**Consent:** On S2, the checkbox "I agree to the Privacy Notice" (unticked by default) with a link to the notice. Both checkboxes must be ticked before "Sign up" is enabled.
+
+**Privacy Notice:** Linked from S2 and S10. States what is collected, why, how long it is kept, how to delete it, and that data is stored in the EU West region.
+
+**Under-18 users:** Not allowed in v1. The "I am 18 or older" checkbox on S2 must be ticked.
+
+**Data outside South Africa:** Supabase stores data in the EU West region. Disclosed in the Privacy Notice as required by POPIA.
+
+---
+
+## 13. Assumptions, risks, open questions and milestones
+
+### 13.1 Assumptions
+- Users have a phone with a camera and mobile data for uploading. Check: ask 5 classmates to test on their own phones.
+- OCR pre-fill is good enough for most SA till slips. Check: test on 20 real receipts from Pick n Pay, Shoprite and BP.
+- Users are comfortable enough with English to use the interface. Check: include 2 non-English-first-language testers in the group of 8 (G3).
+
+### 13.2 Risks
+
+| Risk | Likelihood | Impact | Plan |
+|---|---|---|---|
+| OCR cannot reliably read SA till slips | High | Medium | All fields are editable; user always confirms before saving. OCR failure is a known, handled state (S6 manual entry). |
+| Supabase free storage fills up during testing | Low | Medium | Monitor usage; delete seed data after demo. |
+| Users upload very large photos | Medium | Medium | BR3 enforces 10 MB limit; error message shown if exceeded. |
+| Export file does not open on all devices | Low | High | Test .xlsx on Windows (Excel), Mac (Numbers) and Google Sheets before demo. |
+
+### 13.3 Open questions
+None. All decisions are recorded in this PRD.
+
+### 13.4 Milestones
+
+| Milestone | What is finished | Where to find it | Target date |
+|---|---|---|---|
+| M0: Idea submitted | Original app idea | docs/idea.md | Done |
+| M1: PRD approved | This PRD, Status = Approved | docs/PRD.md | 28 Oct 2026 |
+| M2: Design ready | Style guide + all 13 designs generated and checked | Design file link TBC | 4 Nov 2026 |
+| M3: MASTER.md ready | Generated and checked against this PRD | MASTER.md | 8 Nov 2026 |
+| M4: MVP built | F1–F5 working on Vercel URL | Demo link TBC | 29 Nov 2026 |
+| M5: Tested and demoed | All T- tests passed; demo script presented | Test checklist in MASTER.md | 6 Dec 2026 |
+
+---
+
+## 14. Using your PRD with AI
+
+Use these prompts only after your PRD is Approved. Run one step at a time and check each result before moving on. If the AI gets something wrong because the PRD was unclear, fix the PRD first and add a Change log row, then regenerate. The PRD is the source of truth, not the chat.
+
+**Step 0 — Style guide (in your AI design tool)**
+Paste Section 9 and Section 8.3, then send:
+
+> You are a senior UI designer. Using ONLY the design values and shared components I pasted, create a one-page style guide for my app "SnapBooks": colour swatches with hex codes, the text sizes, spacing, buttons (primary, secondary, danger, disabled), text fields (normal, focused, error), cards, header, tab bar, toast, offline banner and empty-state block. Do not design any app screens yet. Do not add colours, fonts or components I did not list.
+
+**Step 1 — Generate screens, one at a time (in your AI design tool)**
+Paste Sections 2.1, 8.1, 8.4, 9 and the 8.2 spec for the one screen you want. Also attach the Step 0 style guide. Then send:
+
+> You are a senior UI/UX designer. Design screen "[S# Screen name]" for my web app at 1440px wide. Reuse the style guide and shared components exactly. Keep the header and tab bar identical to my other screens. Include every element in the order listed in the spec. Use the exact labels, placeholder text and messages in quotation marks. Fill the screen with the sample content given. Use South African names, places, rand and dates. Never use lorem ipsum. Design the Normal state first, then one extra frame for each other state in the spec. Do not invent features, buttons, screens or text. If something you need is missing, put a grey box labelled "TODO: [what is missing]" and list all TODOs under the design.
+
+**Step 2 — Generate MASTER.md (in a chat AI that accepts files)**
+Attach your whole PRD and links to your final screens, then send:
+
+> You are a senior software engineer. Using the attached PRD, write MASTER.md: the build plan an AI coding assistant will follow to build this app from an empty folder. Use the PRD's IDs (F#, BR#, US#, S#, M#, T-…) everywhere. Include in this order: (1) Summary and scope. (2) Tech stack with versions, folder structure, and exact setup commands. (3) .env.example with every variable from Section 11.5. (4) Database: every entity, field, type, default, uniqueness rule, delete behaviour, relationship and status change from Section 10, as migration steps. (5) Permissions: one rule per row of Section 11.4. (6) Business rules: every BR# with step-by-step logic. (7) Accounts: every decision in Section 5. (8) Navigation: every screen and route from Sections 7.2 and 8.1. (9) Design tokens from Section 9 and shared components from 8.3. (10) Error messages (12.2) and quality, security and privacy rules (12). (11) Seed data and test accounts from Section 10.4. (12) Build phases: Phase 1 is always setup and one running screen; each later phase covers 1–2 features, all Must before any Should, ending with a running app; each phase lists its F#, US#, S# and BR#, files to create, and a Definition of Done as checkboxes. (13) Testing checklist: every T- criterion as a checkbox, manual or automated. Rules: do not add anything not in the PRD. If the PRD is unclear, list it under "Clarifications needed" at the top and stop.
+
+**Step 3 — Build phase by phase (in your AI coding assistant)**
+
+> Read MASTER.md and docs/PRD.md. Build Phase [N] only. Follow MASTER.md exactly. When finished, run the app, tick the Definition of Done checkboxes in MASTER.md, list anything you could not do, and stop. If anything is unclear, ask me instead of guessing.
+
+**Step 4 — Final check**
+
+> List every place where the built app does not match Sections 6 (acceptance criteria), 8 (screens) and 9 (design).
+
+---
+
+## 15. Submission checklist
+
+- [x] No [brackets], "e.g." hints, *Why this matters* lines or Tips remain
+- [x] Every Required section is filled in
+- [x] The pitch follows the pattern and is 20 words or fewer
+- [x] The problem statement has at least one number (5 years)
+- [x] 3–8 key terms defined (1.7) and used consistently
+- [x] 2–3 personas, each linked to a role
+- [x] Every role says how it is enforced; admin approach stated (2.5)
+- [x] 2–4 goals, each with a target and a way to check it; 2–6 non-goals with reasons
+- [x] 3–5 Must features, up to 3 Should features, 6–12 full screens
+- [x] Every rule, limit and calculation written as a BR#
+- [x] Notifications listed ("None in v1")
+- [x] Account decisions (Section 5) fully answered
+- [x] Every Must and Should feature has a story with 2–4 criteria including one unhappy path
+- [x] At least 5 edge cases listed (6 listed)
+- [x] A flow for every Must feature; navigation map showing every screen
+- [x] Every screen and modal has a full spec with all states and sample content
+- [x] All design values filled in with exact numbers and hex codes
+- [x] Every entity has a field table; seed data described
+- [x] Stack, permissions, env vars, folder structure and testing plan filled in
+- [x] Error messages, security rules and POPIA table filled in
+- [x] Open questions (13.3) is empty
+- [x] Milestones have dates, in order
+- [x] Every F# has at least one US#; every US# has at least one S#; every S# appears in a flow and navigation map
+- [x] Change log is up to date
+
+**Peer review**
+
+| Reviewer name | Date | Their one-sentence summary of your app |
+|---|---|---|
+| Claude (proxy) | 28 Oct 2026 | SnapBooks is a simple web app where small business owners photograph their receipts and the app reads the details automatically, so they can filter by month or category and export everything for tax season. |
+
+---
+
+## 16. Glossary
+
+| Term | Plain-English meaning |
+|---|---|
+| Acceptance criteria | The exact checks that prove a feature works, written as Given / When / Then. |
+| API | The way one program asks another program for data or actions, e.g. your app asking the database for receipts. |
+| Backend | The part of the app that runs on a server: the database, log-in and rules. Users don't see it. |
+| Business rule | Any rule, limit or calculation the app follows, e.g. "maximum 500 receipts per account". |
+| Contrast ratio | How much text stands out from its background. 4.5 to 1 or more is readable for most people. |
+| Design tokens | Named design values used in code, e.g. color-primary = #1B7F4F, so every screen matches. |
+| Edge case | An unusual situation the app must still handle, e.g. a user uploads a photo while offline. |
+| Entity | One kind of thing your app stores, e.g. User or Receipt. |
+| Environment variable | A setting or key stored outside your code, in a .env file. |
+| Export | A .xlsx file containing the user's receipts for a chosen date range, downloaded to their device. |
+| Frontend | The part of the app users see and touch. |
+| Hex code | A colour written as # plus 6 characters, e.g. #1B7F4F. |
+| MASTER.md | The step-by-step build plan, generated from your PRD, that an AI coding assistant follows. |
+| Modal | A pop-up box that appears on top of a screen, e.g. "Are you sure you want to delete this receipt?" |
+| MoSCoW | A way to prioritise: Must, Should, Could, Won't. |
+| MVP | Minimum Viable Product: the smallest version of the app that still solves the main problem. |
+| Persona | An imaginary but realistic person who represents a type of user. |
+| POPIA | The Protection of Personal Information Act, South Africa's privacy law. |
+| Receipt | A single photo of a paper till-slip, with extracted vendor, amount, date and category. |
+| Row-Level Security (RLS) | A database rule that controls which rows each user may read or change, e.g. only their own receipts. |
+| Seed data | Fake data loaded into the database for testing and demos. |
+| SAST | South African Standard Time (UTC+2). |
+| Stack | The set of tools and technologies used to build the app. |
+| State (of a screen) | How a screen looks in a situation: normal, empty, loading, error, offline or success. |
+| Tax year | The 12-month period SARS uses: 1 March to 28/29 February. |
+| Toast | A short message that appears briefly and disappears by itself after 3 seconds. |
+| Unhappy path | What happens when something goes wrong: wrong input, no internet, no results, or not allowed. |
+| User story | A feature described from the user's point of view: As a…, I want to…, so that…. |
+| UTC | The world standard time zone. Store times in UTC; show them in SAST. |
+| Vendor | The business name printed on a receipt (e.g. "Pick n Pay"). |
+
+---
+
+*End of SnapBooks PRD v1.0*
