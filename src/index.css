@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+@theme {
+  /* Colours */
+  --color-primary: #1B7F4F;
+  --color-on-primary: #FFFFFF;
+  --color-accent: #F59E0B;
+  --color-background: #F9FAFB;
+  --color-text: #111827;
+  --color-text-secondary: #6B7280;
+  --color-error: #DC2626;
+  --color-success: #16A34A;
+  --color-warning: #D97706;
+  --color-toast-background: #111827;
+
+  /* Loading placeholder grey */
+  --color-gray: #E5E7EB;
+
+  /* Category dot colours */
+  --color-category-fuel: #F59E0B;
+  --color-category-food: #22C55E;
+  --color-category-stock: #3B82F6;
+  --color-category-rent: #8B5CF6;
+  --color-category-other: #9CA3AF;
+
+  /* Typography */
+  --font-family-sans: 'Inter', sans-serif;
+  --font-size-title: 24px;
+  --font-weight-title: 700;
+  --font-size-heading: 18px;
+  --font-weight-heading: 600;
+  --font-size-body: 16px;
+  --font-weight-body: 400;
+  --font-size-small: 13px;
+  --font-weight-small: 400;
+
+  /* Spacing */
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 16px;
+  --spacing-4: 24px;
+  --spacing-5: 32px;
+  --spacing-screen-mobile: 16px;
+  --spacing-screen-tablet: 32px;
+  --spacing-screen-desktop: 24px;
+
+  /* Border radius */
+  --radius-card: 8px;
+  --radius-input: 6px;
+  --radius-button: 6px;
+
+  /* Shadows */
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.1);
+
+  /* Sizes */
+  --size-button: 48px;
+  --size-touch-min: 44px;
+  --size-content-max: 1200px;
+
+  /* Breakpoints */
+  --breakpoint-mobile: 640px;
+  --breakpoint-desktop: 1024px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: 'Inter', sans-serif;
+}
+
+body {
+  background-color: #F9FAFB;
+  color: #111827;
+  font-size: 16px;
+  margin: 0;
+  padding: 0;
+}
+
+:focus-visible {
+  outline: 2px solid #1B7F4F;
+  outline-offset: 2px;
+}

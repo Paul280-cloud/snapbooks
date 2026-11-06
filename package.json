@@ -1,0 +1,49 @@
+{
+  "name": "snapbooks",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "typecheck": "tsc -b",
+    "test": "jest",
+    "test:integration": "node --env-file=.env node_modules/jest/bin/jest.js -c jest.integration.config.cjs",
+    "check": "npm run lint && npm run typecheck && npm test && npx supabase test db && npm run test:integration",
+    "seed": "node --env-file=.env supabase/seed/seed.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2",
+    "@tanstack/react-query": "^5",
+    "lucide-react": "latest",
+    "react": "^19",
+    "react-dom": "^19",
+    "react-router-dom": "^7",
+    "tesseract.js": "latest",
+    "xlsx": "latest"
+  },
+  "devDependencies": {
+    "@playwright/test": "latest",
+    "@secretlint/secretlint-rule-preset-recommend": "latest",
+    "@tailwindcss/vite": "latest",
+    "@testing-library/jest-dom": "latest",
+    "@testing-library/react": "latest",
+    "@testing-library/user-event": "latest",
+    "@types/jest": "latest",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "latest",
+    "eslint": "^9",
+    "globals": "latest",
+    "jest": "latest",
+    "jest-environment-jsdom": "latest",
+    "secretlint": "latest",
+    "tailwindcss": "latest",
+    "ts-jest": "latest",
+    "typescript": "~5.6.2",
+    "typescript-eslint": "latest",
+    "vite": "latest"
+  }
+}

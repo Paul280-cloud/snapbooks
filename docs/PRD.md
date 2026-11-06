@@ -1,4 +1,4 @@
-# SnapBooks — PRD v1.0
+# SnapBooks — PRD v1.1
 
 *Status: In review*
 
@@ -14,7 +14,7 @@
 | Facilitator / reviewer | None assigned |
 | Link to original app idea | https://github.com/Paul280-cloud/snapbooks/blob/main/docs/idea.md |
 | GitHub repository | https://github.com/Paul280-cloud/snapbooks |
-| Version | v1.0 |
+| Version | v1.2 |
 | Status | In review |
 
 ---
@@ -25,6 +25,8 @@
 |---|---|---|---|---|
 | v0.1 | 27 Oct 2026 | All | First draft | None |
 | v1.0 | 28 Oct 2026 | All | All sections completed; status set to In review | None |
+| v1.1 | 2 Nov 2026 | 2.4, 4.4, 5, 6, 8, 10, 11, 12, 13, 14 | Added BR8 (receipt reader), set-new-password mode on S4, resolved contradictions (S10 name, verify-email banner, export header), defined newest-first, photo path, routes, test tools, Node 24, seed password handling; MASTER.md renamed IMPLEMENTATION_PLAN.md | IMPLEMENTATION_PLAN.md v1.0 |
+| v1.2 | 4 Nov 2026 | 6 (T-US3-2) | Mentor feedback: T-US3-2 said "larger than 10 MB" but BR3 and the error message say "under 10 MB", so a file of exactly 10 MB was not covered. T-US3-2 now says "10 MB or larger (a file of exactly 10 MB is rejected)". BR3 is unchanged. Also: milestone M2 now links to the Stitch project (was "link TBC"). | IMPLEMENTATION_PLAN.md v1.2 |
 
 ---
 
@@ -88,7 +90,7 @@ None in v1. An accountant view is a future feature.
 
 | Role | How someone gets this role | Can do | Cannot do |
 |---|---|---|---|
-| Owner | Signs up and verifies email | Upload receipts; edit and delete own receipts; view and filter own receipt list; export own data; edit profile; delete account | See another owner's receipts (enforced by database Row-Level Security) |
+| Owner | Signs up and verifies email | Upload receipts; edit and delete own receipts; view and filter own receipt list; export own data; view profile (name and email); delete account | See another owner's receipts (enforced by database Row-Level Security) |
 
 ### 2.5 Admin
 Admin work is done directly in the Supabase dashboard. There are no admin screens in v1.
@@ -150,9 +152,10 @@ A user can sign up, upload a receipt photo, confirm the extracted details, view 
 | BR2 | The category list is fixed in v1: Food, Stock, Fuel, Rent, Other. No custom categories. | F2, F3, F4, F6 |
 | BR3 | Receipt photos must be JPG, PNG or WebP and under 10 MB. | F2, S6 |
 | BR4 | A user can store at most 500 receipts per account in v1. When the limit is reached, the upload button is disabled and the message "You've reached the 500-receipt limit for this account." is shown. | F2, S5 |
-| BR5 | Export produces one .xlsx file. Each row is one receipt: Date, Vendor, Category, Amount (ZAR). Rows are sorted by date, oldest first. Only receipts in the chosen date range are included. The file is named SnapBooks_export_YYYY-MM-DD.xlsx using today's date. | F5, S8 |
+| BR5 | Export produces one .xlsx file. Each row is one receipt: Date, Vendor, Category, Amount (ZAR). Rows are sorted by date, oldest first. Only receipts in the chosen date range are included. The file is named SnapBooks_export_YYYY-MM-DD.xlsx using today's date. Dates are real date cells shown as 12 Mar 2026. Amounts are numbers shown with 2 decimals. | F5, S8 |
 | BR6 | Receipts are deleted only when the user explicitly deletes them or deletes their account. The app must not auto-delete receipts. SARS requires supporting documents for 5 years. | F4, S7 |
 | BR7 | Amounts are stored and displayed in ZAR as a decimal with exactly 2 places (e.g. R 149.00). The app does not accept negative amounts or non-numeric input. | F2, F4, BR1 |
+| BR8 | When a photo is chosen, the app reads it in the browser and pre-fills what it can: the vendor is the first line with letters; the amount is the number after the word TOTAL, TOTAL DUE or AMOUNT DUE; the date is the first valid date that is not in the future; the category is pre-filled as Fuel only when the vendor is BP, Engen, Shell, Sasol, Caltex or Total, otherwise it is left blank. Anything it cannot read stays blank. | F2, S6, M1 |
 
 ### 4.5 Notifications
 None in v1. All verification and password-reset emails are described in Section 5.
@@ -169,8 +172,8 @@ None in v1. All verification and password-reset emails are described in Section 
 | Email verification | Required. After sign-up the user is taken to S3 Log In with the banner "Check your email and click the link to verify your account." Login is refused until verified. |
 | Password rules | At least 8 characters, including at least 1 number. Eye icon to show or hide. |
 | Forgot password | S4 Forgot Password sends a reset link. The link works for 1 hour. |
-| Failed log-in attempts | After 5 wrong passwords: "Too many attempts. Try again in 15 minutes." |
-| Stay logged in | 30 days, then the user must log in again. |
+| Failed log-in attempts | After too many wrong passwords in a short time (Supabase Auth's sign-in limit): "Too many attempts. Try again in 15 minutes." |
+| Stay logged in | 30 days, then the user must log in again. The app signs the user out on start-up when the last sign-in was more than 30 days ago. |
 | Log out | S10 Profile → "Log out". No confirmation. |
 | Delete account | S10 Profile → "Delete account" → M3 confirm. Immediately and permanently deletes the profile, all receipts and all uploaded photos. |
 | Change email | Not in v1. |
@@ -184,7 +187,7 @@ None in v1. All verification and password-reset emails are described in Section 
 **US1 — Account creation (F1)**
 As a new user, I want to create an account so that I can start saving receipts.
 
-- T-US1-1: Given I am on S2 Sign Up, when I enter a valid email, a password of 8+ characters with 1 number, tick "I am 18 or older" and "I agree to the Privacy Notice", and tap "Sign up", then my account is created and I go to S3 Log In with the banner "Check your email to verify your account."
+- T-US1-1: Given I am on S2 Sign Up, when I enter a valid email, a password of 8+ characters with 1 number, tick "I am 18 or older" and "I agree to the Privacy Notice", and tap "Sign up", then my account is created and I go to S3 Log In with the banner "Check your email and click the link to verify your account."
 - T-US1-2 (unhappy): Given the email already has an account, when I tap "Sign up", then I see "This email already has an account. Log in instead?" with a "Log in" link.
 - T-US1-3 (unhappy): Given either checkbox is unticked or the password is shorter than 8 characters, then "Sign up" is greyed out and the password field shows "At least 8 characters, including a number."
 
@@ -194,19 +197,20 @@ As a registered user, I want to log in and reset my password so that I can acces
 - T-US2-1: Given my email is verified, when I enter the correct email and password on S3 and tap "Log in", then I go to S5 Receipt List.
 - T-US2-2 (unhappy): Given I have not verified my email, when I tap "Log in", then I see "Please verify your email first." with a "Resend email" link.
 - T-US2-3: Given I tap "Forgot password?" and enter my email on S4, when I tap "Send link", then I always see "If an account exists for this email, we've sent a reset link." (Never reveals whether the account exists.)
+- T-US2-4: Given I opened the reset link, when I enter a valid new password and tap "Save password", then I am logged in and see S5. If the password is invalid, the field shows "At least 8 characters, including a number."
 
 **US3 — Upload a receipt (F2)**
 As a logged-in user, I want to upload a photo of a receipt so that I have a digital record.
 
 - T-US3-1: Given I am on S5, when I tap "Upload" and pick a JPG, PNG or WebP under 10 MB, then I see the photo on S6 with fields for Vendor, Amount, Date, and Category pre-filled where the app can read them.
-- T-US3-2 (unhappy): Given the file is larger than 10 MB or not a JPG, PNG or WebP, when I pick it, then I see "This file can't be used. Choose a JPG, PNG or WebP under 10 MB."
+- T-US3-2 (unhappy): Given the file is 10 MB or larger (a file of exactly 10 MB is rejected) or not a JPG, PNG or WebP, when I pick it, then I see "This file can't be used. Choose a JPG, PNG or WebP under 10 MB."
 - T-US3-3 (unhappy): Given I lose internet during upload, then I see "Upload failed. Check your connection." with "Try again", and my photo is kept on S6.
 - T-US3-4: Given I confirm the details on M1, when I tap "Save", then the receipt appears at the top of S5 with a toast "Receipt saved."
 
 **US4 — View and filter receipts (F3)**
 As a user, I want to see and filter my receipts so that I can find things quickly.
 
-- T-US4-1: Given I have receipts on S5, when I scroll, then I see them newest first, 20 at a time. The next 20 load when I reach the bottom.
+- T-US4-1: Given I have receipts on S5, when I scroll, then I see them newest first, 20 at a time. The next 20 load when I reach the bottom. Newest first means newest receipt date first; receipts with the same date appear with the most recently added first.
 - T-US4-2: Given I type in the search bar or pick a category filter, then the list updates to show only matching receipts.
 - T-US4-3 (unhappy): Given I have no receipts, then I see "No receipts yet. Tap Upload to add your first receipt." with an "Upload" button.
 
@@ -225,7 +229,7 @@ As a user, I want to delete a receipt so that I can remove mistakes.
 **US7 — Export receipts (F5)**
 As a user, I want to export my receipts as a spreadsheet so that I can give it to my accountant or SARS.
 
-- T-US7-1: Given I am on S8 and choose a date range, when I tap "Export", then a .xlsx file downloads with columns: Date, Vendor, Category, Amount — rows sorted oldest first (BR5).
+- T-US7-1: Given I am on S8 and choose a date range, when I tap "Export", then a .xlsx file downloads with columns: Date, Vendor, Category, Amount (ZAR) — rows sorted oldest first (BR5).
 - T-US7-2 (unhappy): Given no receipts exist in the chosen range, then I see "No receipts in that range. Adjust the dates and try again."
 
 **US8 — Dashboard summary (F6)**
@@ -357,16 +361,18 @@ Standard screens checked:
 | S1 | Welcome | Full screen | Logged out | App pitch; sign up and log in buttons | No | US1, US2 |
 | S2 | Sign Up | Full screen | Logged out | Create an account | No | US1 |
 | S3 | Log In | Full screen | Logged out | Log in; verify-email banner after sign-up | No | US2 |
-| S4 | Forgot Password | Full screen | Logged out | Request a password reset link | No | US2 |
+| S4 | Forgot Password | Full screen | Logged out | Request a password reset link; set a new password from the reset link | No | US2 |
 | S5 | Receipt List | Tab | Logged in: Owner | View, search and filter all receipts; upload button | Yes | US3, US4, US5, US6 |
 | S6 | Upload Receipt | Full screen | Logged in: Owner | Review and edit pre-filled receipt fields before confirming | No | US3 |
 | S7 | Edit Receipt | Full screen | Logged in: Owner | Edit or delete a saved receipt | No | US5, US6 |
 | S8 | Export | Tab | Logged in: Owner | Choose a date range and download .xlsx | Yes | US7 |
 | S9 | Dashboard | Tab | Logged in: Owner | Spend by category and month as bar charts | Yes | US8 |
-| S10 | Profile & Settings | Tab | Logged in: Owner | Edit name; log out; delete account; Privacy Notice link | Yes | US1 |
+| S10 | Profile & Settings | Tab | Logged in: Owner | View name and email (read-only in v1); log out; delete account; Privacy Notice link | Yes | US1 |
 | M1 | Confirm Receipt Details | Modal | Logged in: Owner | Review extracted fields before saving | — | US3 |
 | M2 | Delete Receipt | Modal | Logged in: Owner | Confirm permanent deletion of one receipt | — | US6 |
 | M3 | Delete Account | Modal | Logged in: Owner | Confirm permanent deletion of account and all data | — | US1 |
+
+The Privacy Notice is a static page at /privacy, not a numbered screen.
 
 ### 8.2 Screen specifications
 
@@ -427,21 +433,27 @@ Layout:
 6. Primary button: "Log in" → S5
 7. Link: "Don't have an account? Sign up" → S2
 
-States: Normal · Error ("Incorrect email or password.") · Locked ("Too many attempts. Try again in 15 minutes.") · Unverified ("Please verify your email first." + "Resend email" link).
+States: Normal · Error ("Incorrect email or password.") · Locked ("Too many attempts. Try again in 15 minutes.") · Unverified ("Please verify your email first." + "Resend email" link). After tapping "Resend email", show "Verification email sent."
 Sample content: Static screen.
 
 ---
 
 **S4 Forgot Password**
-Purpose: Request a password reset link.
+Purpose: Request a password reset link; set a new password when opened from the reset link.
 Who can open it: Logged out.
-Comes from / goes to: S3 → S4 → stays on S4 with confirmation.
+Comes from / goes to: S3 → S4 → stays on S4 with confirmation. The reset email link opens S4 in set-new-password mode → S5.
 
-Layout:
+Layout (request mode):
 1. Header: back arrow, title "Forgot password"
 2. Email field
 3. Primary button: "Send link"
 4. After tap: "If an account exists for this email, we've sent a reset link."
+
+Layout (set-new-password mode, opened from the reset email link):
+1. Header: title "Set new password"
+2. One password field "New password" with the eye icon and the rule "At least 8 characters, including a number."
+3. Primary button: "Save password"
+4. After saving, the user is logged in and goes to S5.
 
 Sample content: Static screen.
 
@@ -453,11 +465,11 @@ Who can open it: Logged in: Owner.
 Comes from / goes to: S3, M1, S7, M2 → S5 → S6, S7, S8, S9, S10.
 
 Layout:
-1. Header: SnapBooks wordmark left; receipt count right (e.g. "47 receipts")
+1. Header: SnapBooks wordmark left; receipt count right ("{n} receipts", e.g. "47 receipts"; "1 receipt" for one)
 2. Search bar: placeholder "Search by vendor…"
 3. Filter row: category dropdown (All, Food, Stock, Fuel, Rent, Other); month/year picker
-4. Primary button: "+ Upload receipt" (disabled with message if BR4 reached)
-5. Receipt list: scrolling list of Receipt cards, newest first, 20 at a time
+4. Primary button: "+ Upload receipt" (disabled with message if BR4 reached). The Upload button opens the file picker; the chosen file is passed to S6.
+5. Receipt list: scrolling list of Receipt cards, newest first (newest receipt date first; same date: most recently added first), 20 at a time
 6. Tab bar
 
 Receipt card (in order): category colour dot · vendor name (bold) · date (e.g. 12 Mar 2026) · amount right-aligned (e.g. R 149.00) · category label.
@@ -499,7 +511,7 @@ Form fields:
 | Date | Date | Yes | DD/MM/YYYY | Not in the future (BR1) | "Enter a date that is not in the future." |
 | Category | Dropdown | Yes | Select a category | Food, Stock, Fuel, Rent, Other (BR2) | "Select a category." |
 
-States: Normal (pre-filled) · Manual (couldn't read — all fields blank, tip shown) · Error · Uploading (spinner) · Offline (upload disabled).
+States: Normal (pre-filled) · Manual (couldn't read — all fields blank, tip shown) · Error · Uploading (spinner; also shown while the photo is being read) · Offline (upload disabled).
 Sample content: Zanele's Pick n Pay slip · Vendor: Pick n Pay · Amount: R 320.00 · Date: 12 Mar 2026 · Category: Stock.
 
 ---
@@ -516,7 +528,7 @@ Layout:
 4. Primary button: "Save" → S5
 5. Danger button: "Delete receipt" → M2
 
-States: Same as S6, plus Saving (spinner) and Success (→ S5 with toast "Receipt updated.").
+States: Normal, Error, Saving, Success, Offline, Not available ("This receipt is no longer available.").
 Sample content: Zanele editing BP Fuels receipt — changing R 780.00 to R 790.00.
 
 ---
@@ -529,9 +541,9 @@ Comes from / goes to: Tab bar → S8.
 Layout:
 1. Header: title "Export"
 2. Date range: Start date field + End date field (default: current tax year)
-3. Summary line: "23 receipts found in this range."
+3. Summary line: "23 receipts found in this range." ("1 receipt found in this range." for one)
 4. Primary button: "Export to spreadsheet" (BR5)
-5. Note: "File format: .xlsx · Columns: Date, Vendor, Category, Amount · Sorted oldest first"
+5. Note: "File format: .xlsx · Columns: Date, Vendor, Category, Amount (ZAR) · Sorted oldest first"
 6. Tab bar
 
 States: Normal (receipts found) · Empty range ("No receipts in that range. Adjust the dates and try again.") · Exporting (spinner) · Success (toast "Export ready." + file downloads) · Offline (button disabled + banner).
@@ -564,7 +576,7 @@ Comes from / goes to: Tab bar → S10 → S1.
 
 Layout:
 1. Header: title "Profile"
-2. Display name and email (read-only in v1)
+2. Display name and email (read-only in v1). The display name is shown only if one exists. New users have none and see only their email.
 3. Link: "Privacy Notice"
 4. Secondary button: "Log out" → S1
 5. Danger button: "Delete account" → M3
@@ -654,6 +666,7 @@ Sample receipts (Zanele):
 | Look and feel | Clean, trustworthy, simple |
 | Primary colour | Forest green #1B7F4F (white text on it passes 4.5:1 contrast) |
 | Secondary / accent colour | Amber #F59E0B (chart highlights; Fuel category dot) |
+| Category dot colours | Food, Stock, Rent and Other use the dot colours shown in the exported S5 design (docs/designs/S5.png) |
 | Background colour | #F9FAFB |
 | Main text colour | #111827 |
 | Secondary text colour | #6B7280 (passes 4.5:1 on #F9FAFB) |
@@ -713,7 +726,7 @@ Direct, friendly, jargon-free. Examples: "Receipt saved!" not "Record successful
 |---|---|---|---|---|---|---|
 | id | ID | Yes | Auto | Yes | — | — |
 | owner_id | Link to User | Yes | Current user | No | — | Delete this receipt too |
-| photo_url | Text (500) | Yes | — | No | URL to file in Supabase Storage | — |
+| photo_url | Text (500) | Yes | — | No | Path to the file in the private Supabase Storage bucket (`{owner_id}/{receipt_id}.{ext}`). Photos are shown with signed links valid for 1 hour. | — |
 | vendor | Text (100) | Yes | — | No | 1–100 characters (BR1) | — |
 | amount | Decimal | Yes | — | No | > 0, ≤ 999 999.99, 2 dp (BR7) | — |
 | date | Date | Yes | — | No | Not in the future (BR1) | — |
@@ -731,14 +744,14 @@ No status fields in v1. Receipts have no workflow state.
 
 **Reference data:** The five category values are hard-coded in the app. No database table needed.
 
-**Seed data:** The four users and sample receipts from Section 8.4 are loaded by a seed script in supabase/seed/.
+**Seed data:** The four users and sample receipts from Section 8.4 are loaded by seed rows in supabase/seed.sql and a script supabase/seed/seed.js that sets passwords and uploads photos.
 
 **Test accounts:**
 
 | Role | Email | Test-only password |
 |---|---|---|
-| Owner (with receipts) | zanele.d@example.com | Kept in seed script README only |
-| Owner (empty) | ayesha.p@example.com | Kept in seed script README only |
+| Owner (with receipts) | zanele.d@example.com | Set in the SEED_TEST_PASSWORD environment variable |
+| Owner (empty) | ayesha.p@example.com | Set in the SEED_TEST_PASSWORD environment variable |
 
 ---
 
@@ -750,16 +763,20 @@ No status fields in v1. Receipts have no workflow state.
 |---|---|---|
 | Frontend | React + Vite | Fast setup; covered in the course |
 | Styling | Tailwind CSS | Utility-first; matches Section 9 design tokens |
+| Routing | React Router | One route per screen; handles redirects for logged-in and logged-out users |
 | Backend / API | Supabase | Auth, database and file storage in one service |
 | Database | PostgreSQL (via Supabase) | Relational; Row-Level Security built in |
 | Log-in | Supabase Auth | Email verification and password reset included |
 | File / image storage | Supabase Storage ("receipts" bucket) | Stores uploaded receipt photos |
+| Photo reading | tesseract.js (runs in the browser, files hosted in `public/tesseract/`) | Reads receipt text without sending photos to any service |
+| Data fetching | @tanstack/react-query | Caching, loading and error states for list and detail screens |
+| Server functions | Supabase Edge Functions (delete-account) | Deleting an account needs the admin key, which must never be in the browser |
 | Scheduled jobs | None in v1 | No timed actions needed |
 | Export | SheetJS (xlsx, client-side) | Generates .xlsx in the browser; no server needed |
 | Hosting | Vercel | Free tier; automatic deploys from GitHub |
-| Language | TypeScript, npm, Node.js 20 LTS | Fewer type bugs |
-| Testing | Jest for BR1, BR4, BR5, BR7; manual checklist for all T- criteria | Business rules are the highest risk |
-| Version control | https://github.com/Paul280-cloud/snapbooks | Save PRD as docs/PRD.md and MASTER.md in root |
+| Language | TypeScript, npm, Node.js 24 LTS | Fewer type bugs |
+| Testing | Jest, React Testing Library, pgTAP, Playwright, secretlint | Tests at every level, from business rules to full user flows |
+| Version control | https://github.com/Paul280-cloud/snapbooks | Save PRD as docs/PRD.md and IMPLEMENTATION_PLAN.md in root |
 
 ### 11.2 Third-party services
 
@@ -769,8 +786,10 @@ No status fields in v1. Receipts have no workflow state.
 | Vercel | Hosting | Yes | No |
 | SheetJS | Client-side .xlsx generation | Yes (open source) | No |
 
+Tesseract.js runs in the browser. No photo or text is sent to any service.
+
 ### 11.3 How the parts connect
-The React app runs in the browser and talks to Supabase using the Supabase JavaScript client. All database queries go through Supabase's REST API with Row-Level Security enforcing that each user can only read and write their own receipts. Receipt photos are uploaded directly from the browser to Supabase Storage; the database stores only the file URL. The .xlsx export is generated entirely in the browser by SheetJS — no server call is needed for export.
+The React app runs in the browser and talks to Supabase using the Supabase JavaScript client. All database queries go through Supabase's REST API with Row-Level Security enforcing that each user can only read and write their own receipts. Receipt photos are uploaded directly from the browser to Supabase Storage; the database stores only the file path. The .xlsx export is generated entirely in the browser by SheetJS — no server call is needed for export.
 
 ### 11.4 Permissions
 
@@ -778,13 +797,14 @@ The React app runs in the browser and talks to Supabase using the Supabase JavaS
 |---|---|---|---|
 | User | Read | Owner only | Own row only |
 | User | Update | Owner only | Own row only |
-| User | Delete | Owner only | Cascades to all Receipts and Storage files |
+| User | Delete | Owner only | Done through the delete-account Edge Function, own account only; cascades to all Receipts and Storage files |
 | Receipt | Read | Owner only | owner_id = current user |
 | Receipt | Create | Owner only | owner_id set to current user; max 500 per user (BR4) |
 | Receipt | Update | Owner only | owner_id = current user |
 | Receipt | Delete | Owner only | owner_id = current user |
 | Storage "receipts" | Upload | Owner only | Inside a folder named with their user id |
 | Storage "receipts" | Read | Owner only | Path must start with their user id |
+| Storage "receipts" | Delete | Owner only | Path must start with their user id |
 
 ### 11.5 Environment variables
 
@@ -793,12 +813,67 @@ The React app runs in the browser and talks to Supabase using the Supabase JavaS
 | VITE_SUPABASE_URL | Project URL | Supabase dashboard → Project Settings | Public |
 | VITE_SUPABASE_ANON_KEY | Public (anon) key | Same | Public — safe only because RLS is on |
 | SUPABASE_SERVICE_ROLE_KEY | Admin key for seed script only | Same | Secret: never in the browser app |
+| SEED_TEST_PASSWORD | Password for the seed test accounts | You choose it | Secret: seed script and tests only |
 
 ### 11.6 Folder structure
 
+```
+snapbooks/
+  src/
+    main.tsx                        App entry: providers (React Query, router)
+    App.tsx                         Routes and redirect rules
+    index.css                       Tailwind and the theme values from tokens.ts
+    pages/                          One file per screen
+      Welcome.tsx                   S1  /
+      SignUp.tsx                    S2  /sign-up
+      LogIn.tsx                     S3  /log-in
+      ForgotPassword.tsx            S4  /forgot-password (request mode and set-new-password mode)
+      ReceiptList.tsx               S5  /receipts
+      UploadReceipt.tsx             S6  /receipts/new (M1 is shown on top of it)
+      EditReceipt.tsx               S7  /receipts/:id (M2 is shown on top of it)
+      Export.tsx                    S8  /export
+      Dashboard.tsx                 S9  /dashboard
+      Profile.tsx                   S10 /profile (M3 is shown on top of it)
+    components/                     Shared components (Section 8.3)
+    lib/
+      supabase.ts                   Supabase client (public key only)
+      api/                          One file per operation group
+      rules/                        Pure business-rule functions (BR#), no network
+      messages.ts                   Every user-facing message from the PRD, in one place
+    hooks/                          useSession, useOnlineStatus
+    theme/tokens.ts                 Design tokens (Section 9)
+  public/
+    privacy.html                    Privacy Notice (linked from S2 and S10)
+    tesseract/                      Self-hosted OCR worker, core and English language data
+  supabase/
+    config.toml                     Local backend and Auth settings
+    migrations/                     SQL migrations
+    functions/delete-account/       Edge Function
+    tests/                          pgTAP tests
+    seed.sql                        Seed rows: 4 users and their receipts (Section 8.4)
+    seed/seed.js                    Sets seed passwords and uploads seed photos (uses the admin key; never in the app)
+    seed/README.md                  How to run the seed script (no passwords in it)
+    seed/photos/                    Sample receipt photos for the seed data
+  tests/
+    unit/                           Business-rule and pure-function tests
+    components/                     Component and screen-state tests
+    integration/                    Operation tests against the local backend
+    e2e/                            Playwright flows
+    fixtures/                       Sample OCR text and a sample receipt photo
+  docs/PRD.md
+  docs/designs/                     Exported designs: S1.png to S10.png, M1.png to M3.png
+  jest.config.cjs
+  jest.integration.config.cjs
+  playwright.config.ts
+  vercel.json                       Sends every route to index.html (single-page app)
+  IMPLEMENTATION_PLAN.md
+  .env.example
+  .gitignore
+  README.md
+```
+
 ### 11.7 Testing plan
-- All T- criteria tested manually on a real browser using the checklist in MASTER.md.
-- BR1, BR4, BR5 and BR7 get Jest unit tests.
+- Unit and component tests with Jest and React Testing Library; database and permission tests with pgTAP (`supabase test db`); integration tests with Jest and supabase-js against local Supabase; end-to-end tests with Playwright; manual checks for design, speed and browsers. Every T- criterion has an automated test unless the plan marks it manual.
 - Test accounts are from Section 10.4.
 
 **5-minute demo script:**
@@ -819,7 +894,7 @@ The React app runs in the browser and talks to Supabase using the Supabase JavaS
 |---|---|
 | Speed | Every screen shows content or a loading placeholder within 3 seconds on mobile data, tested on a real phone |
 | Data usage | Photos stored as-is (under 10 MB); list loads 20 at a time; no auto-playing video |
-| Offline | Receipt list visible (cached); upload, save, delete and export disabled; banner shown |
+| Offline | Receipt list stays visible from memory during the current session; upload, save, delete and export disabled; banner shown |
 | Devices | Latest Chrome, Edge and Safari; screens from 360px wide |
 | Language and region | English (South Africa); dates as 12 Mar 2026; currency as R 149.00; SAST |
 | Accessibility | As in Section 9.4 |
@@ -838,6 +913,7 @@ The React app runs in the browser and talks to Supabase using the Supabase JavaS
 | Upload failed | "Upload failed. Check your connection." | "Try again" button; photo and fields kept on S6 |
 | File type or size wrong | "This file can't be used. Choose a JPG, PNG or WebP under 10 MB." | File not uploaded; user stays on S6 |
 | Export range empty | "No receipts in that range. Adjust the dates and try again." | No file downloaded; user stays on S8 |
+| Verification email resent (success) | "Verification email sent." | Message shown on S3 |
 
 ### 12.3 Security
 - Passwords are handled only by Supabase Auth; the app never stores or sees a password.
@@ -856,7 +932,7 @@ The React app runs in the browser and talks to Supabase using the Supabase JavaS
 
 **Consent:** On S2, the checkbox "I agree to the Privacy Notice" (unticked by default) with a link to the notice. Both checkboxes must be ticked before "Sign up" is enabled.
 
-**Privacy Notice:** Linked from S2 and S10. States what is collected, why, how long it is kept, how to delete it, and that data is stored in the EU West region.
+**Privacy Notice:** Linked from S2 and S10. States what is collected, why, how long it is kept, how to delete it, and that data is stored in the EU West region. The Privacy Notice is a static page at /privacy, not a numbered screen.
 
 **Under-18 users:** Not allowed in v1. The "I am 18 or older" checkbox on S2 must be ticked.
 
@@ -889,10 +965,10 @@ None. All decisions are recorded in this PRD.
 |---|---|---|---|
 | M0: Idea submitted | Original app idea | docs/idea.md | Done |
 | M1: PRD approved | This PRD, Status = Approved | docs/PRD.md | 28 Oct 2026 |
-| M2: Design ready | Style guide + all 13 designs generated and checked | Design file link TBC | 4 Nov 2026 |
-| M3: MASTER.md ready | Generated and checked against this PRD | MASTER.md | 8 Nov 2026 |
+| M2: Design ready | Style guide + all 13 designs generated and checked | https://stitch.withgoogle.com/projects/10814477568114549475 | 4 Nov 2026 |
+| M3: IMPLEMENTATION_PLAN.md ready | Generated and checked against this PRD | IMPLEMENTATION_PLAN.md | 8 Nov 2026 |
 | M4: MVP built | F1–F5 working on Vercel URL | Demo link TBC | 29 Nov 2026 |
-| M5: Tested and demoed | All T- tests passed; demo script presented | Test checklist in MASTER.md | 6 Dec 2026 |
+| M5: Tested and demoed | All T- tests passed; demo script presented | Test checklist in IMPLEMENTATION_PLAN.md | 6 Dec 2026 |
 
 ---
 
@@ -910,14 +986,14 @@ Paste Sections 2.1, 8.1, 8.4, 9 and the 8.2 spec for the one screen you want. Al
 
 > You are a senior UI/UX designer. Design screen "[S# Screen name]" for my web app at 1440px wide. Reuse the style guide and shared components exactly. Keep the header and tab bar identical to my other screens. Include every element in the order listed in the spec. Use the exact labels, placeholder text and messages in quotation marks. Fill the screen with the sample content given. Use South African names, places, rand and dates. Never use lorem ipsum. Design the Normal state first, then one extra frame for each other state in the spec. Do not invent features, buttons, screens or text. If something you need is missing, put a grey box labelled "TODO: [what is missing]" and list all TODOs under the design.
 
-**Step 2 — Generate MASTER.md (in a chat AI that accepts files)**
+**Step 2 — Generate IMPLEMENTATION_PLAN.md (in a chat AI that accepts files)**
 Attach your whole PRD and links to your final screens, then send:
 
-> You are a senior software engineer. Using the attached PRD, write MASTER.md: the build plan an AI coding assistant will follow to build this app from an empty folder. Use the PRD's IDs (F#, BR#, US#, S#, M#, T-…) everywhere. Include in this order: (1) Summary and scope. (2) Tech stack with versions, folder structure, and exact setup commands. (3) .env.example with every variable from Section 11.5. (4) Database: every entity, field, type, default, uniqueness rule, delete behaviour, relationship and status change from Section 10, as migration steps. (5) Permissions: one rule per row of Section 11.4. (6) Business rules: every BR# with step-by-step logic. (7) Accounts: every decision in Section 5. (8) Navigation: every screen and route from Sections 7.2 and 8.1. (9) Design tokens from Section 9 and shared components from 8.3. (10) Error messages (12.2) and quality, security and privacy rules (12). (11) Seed data and test accounts from Section 10.4. (12) Build phases: Phase 1 is always setup and one running screen; each later phase covers 1–2 features, all Must before any Should, ending with a running app; each phase lists its F#, US#, S# and BR#, files to create, and a Definition of Done as checkboxes. (13) Testing checklist: every T- criterion as a checkbox, manual or automated. Rules: do not add anything not in the PRD. If the PRD is unclear, list it under "Clarifications needed" at the top and stop.
+> You are a senior software engineer. Using the attached PRD, write IMPLEMENTATION_PLAN.md: the build plan an AI coding assistant will follow to build this app from an empty folder. Use the PRD's IDs (F#, BR#, US#, S#, M#, T-…) everywhere. Include in this order: (1) Summary and scope. (2) Tech stack with versions, folder structure, and exact setup commands. (3) .env.example with every variable from Section 11.5. (4) Database: every entity, field, type, default, uniqueness rule, delete behaviour, relationship and status change from Section 10, as migration steps. (5) Permissions: one rule per row of Section 11.4. (6) Business rules: every BR# with step-by-step logic. (7) Accounts: every decision in Section 5. (8) Navigation: every screen and route from Sections 7.2 and 8.1. (9) Design tokens from Section 9 and shared components from 8.3. (10) Error messages (12.2) and quality, security and privacy rules (12). (11) Seed data and test accounts from Section 10.4. (12) Build phases: Phase 1 is always setup and one running screen; each later phase covers 1–2 features, all Must before any Should, ending with a running app; each phase lists its F#, US#, S# and BR#, files to create, and a Definition of Done as checkboxes. (13) Testing checklist: every T- criterion as a checkbox, manual or automated. Rules: do not add anything not in the PRD. If the PRD is unclear, list it under "Clarifications needed" at the top and stop.
 
 **Step 3 — Build phase by phase (in your AI coding assistant)**
 
-> Read MASTER.md and docs/PRD.md. Build Phase [N] only. Follow MASTER.md exactly. When finished, run the app, tick the Definition of Done checkboxes in MASTER.md, list anything you could not do, and stop. If anything is unclear, ask me instead of guessing.
+> Read IMPLEMENTATION_PLAN.md and docs/PRD.md. Build Phase [N] only. Follow IMPLEMENTATION_PLAN.md exactly. When finished, run the app, tick the Definition of Done checkboxes in IMPLEMENTATION_PLAN.md, list anything you could not do, and stop. If anything is unclear, ask me instead of guessing.
 
 **Step 4 — Final check**
 
@@ -976,7 +1052,7 @@ Attach your whole PRD and links to your final screens, then send:
 | Export | A .xlsx file containing the user's receipts for a chosen date range, downloaded to their device. |
 | Frontend | The part of the app users see and touch. |
 | Hex code | A colour written as # plus 6 characters, e.g. #1B7F4F. |
-| MASTER.md | The step-by-step build plan, generated from your PRD, that an AI coding assistant follows. |
+| IMPLEMENTATION_PLAN.md | The step-by-step build plan, generated from your PRD, that an AI coding assistant follows. |
 | Modal | A pop-up box that appears on top of a screen, e.g. "Are you sure you want to delete this receipt?" |
 | MoSCoW | A way to prioritise: Must, Should, Could, Won't. |
 | MVP | Minimum Viable Product: the smallest version of the app that still solves the main problem. |
@@ -997,4 +1073,4 @@ Attach your whole PRD and links to your final screens, then send:
 
 ---
 
-*End of SnapBooks PRD v1.0*
+*End of SnapBooks PRD v1.1*

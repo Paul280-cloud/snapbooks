@@ -6,84 +6,32 @@ SnapBooks is a web app for small South African business owners — spaza shops, 
 
 ---
 
-## What it does
+## Prerequisites
 
-- **Upload a receipt** — take a photo or pick one from your device; the app pre-fills the details
-- **Review and confirm** — check the vendor, amount, date and category before saving
-- **Search and filter** — find any receipt by vendor name, category or month
-- **Edit or delete** — correct mistakes on any saved receipt
-- **Export** — download all receipts for a chosen date range as a `.xlsx` spreadsheet
-- **Dashboard** — see your total spend by category and by month as bar charts
+- Node.js 24 LTS and npm
+- Git
+- Docker Desktop (running) — required for the local Supabase backend
+- Playwright Chromium: `npx playwright install chromium`
 
 ---
 
-## Tech stack
-
-| Layer | Choice |
-|---|---|
-| Frontend | React + Vite + TypeScript |
-| Styling | Tailwind CSS |
-| Backend / Auth / DB | Supabase (PostgreSQL + Auth + Storage) |
-| Export | SheetJS (client-side `.xlsx` generation) |
-| Hosting | Vercel |
-
----
-
-## Getting started
-
-### Prerequisites
-
-- Node.js 20 LTS
-- npm
-- A free [Supabase](https://supabase.com) account
-- A free [Vercel](https://vercel.com) account (for deployment)
-
-### 1. Clone the repo
+## Setup
 
 ```bash
-git clone https://github.com/Paul280-cloud/snapbooks.git
-cd snapbooks
-```
-
-### 2. Install dependencies
-
-```bash
+# 1. Install dependencies
 npm install
-```
 
-### 3. Set up environment variables
-
-Copy the example file and fill in your Supabase project details:
-
-```bash
+# 2. Copy the env example and fill in your values after running supabase start
 cp .env.example .env
-```
 
-Open `.env` and replace the placeholder values:
+# 3. Start the local Supabase backend (requires Docker Desktop running)
+npx supabase start
 
-Find both values in your Supabase dashboard under **Project Settings → API**.
+# 4. Reset and seed the database
+npx supabase db reset
+npm run seed
 
-> **Never commit your real `.env` file.** It is already listed in `.gitignore`.
-
-### 4. Run the database migrations
-
-```bash
-npx supabase db push
-```
-
-Or paste the contents of `supabase/migrations/` into the Supabase SQL editor and run them in order.
-
-### 5. Load seed data (optional, for testing)
-
-```bash
-node supabase/seed/seed.js
-```
-
-This creates four test accounts and sample receipts. Test passwords are in `supabase/seed/README.md` — never commit real passwords.
-
-### 6. Start the dev server
-
-```bash
+# 5. Start the app
 npm run dev
 ```
 
@@ -91,46 +39,62 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---
 
-## Project structure
+## Commands
+
+| Purpose | Command |
+|---|---|
+| Start the app | `npm run dev` |
+| Unit and component tests | `npm test` |
+| Database and permission tests | `npx supabase test db` |
+| Integration tests | `npm run test:integration` |
+| End-to-end tests | `npx playwright test` |
+| Lint | `npm run lint` |
+| Type check | `npm run typecheck` |
+| **Full check** | `npm run check` |
+| Build for release | `npm run build` |
+
+> `npm run check` requires `npx supabase start` running and the database seeded.
 
 ---
 
 ## Environment variables
 
-| Name | What it is | Public or secret? |
+| Name | Where used | Public or secret? |
 |---|---|---|
-| `VITE_SUPABASE_URL` | Your Supabase project URL | Public |
-| `VITE_SUPABASE_ANON_KEY` | Your Supabase anon key | Public (safe because RLS is on) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Admin key for the seed script only | **Secret — never in the app** |
+| `VITE_SUPABASE_URL` | App (`src/`) | Public |
+| `VITE_SUPABASE_ANON_KEY` | App (`src/`) | Public (RLS enforced) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Seed script only | **Secret — never in `src/`** |
+| `SEED_TEST_PASSWORD` | Seed script only | **Secret — never in `src/`** |
+
+> **Never commit `.env` or `.env.hosted`.** Both are in `.gitignore`.
 
 ---
 
-## Running tests
+## Test accounts
 
-```bash
-npm test
-```
+Passwords are set via `SEED_TEST_PASSWORD` in `.env` (never committed).
 
-Jest unit tests cover business rules BR1, BR4, BR5 and BR7. All other acceptance criteria are tested manually using the checklist in `MASTER.md`.
-
----
-
-## Deploying to Vercel
-
-1. Push your code to GitHub.
-2. Import the repo in the [Vercel dashboard](https://vercel.com/new).
-3. Add your environment variables (`VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`) under **Settings → Environment Variables**.
-4. Deploy — Vercel builds and hosts automatically on every push to `main`.
+| Account | Use for |
+|---|---|
+| zanele.d@example.com | Demo and general testing (14 receipts) |
+| mpho.s@example.com | Export testing (9 receipts) |
+| thabo.m@example.com | Near-empty state testing (1 receipt) |
+| ayesha.p@example.com | Empty state testing (0 receipts) |
 
 ---
 
-## Documentation
+## Tech stack
 
-| Document | Location | What it is |
-|---|---|---|
-| PRD | `docs/PRD.md` | Full product requirements: features, screens, business rules, data model |
-| MASTER.md | `MASTER.md` | Phase-by-phase build plan for AI coding assistants |
-| Seed README | `supabase/seed/README.md` | Test account credentials (never commit real passwords) |
+| Layer | Choice |
+|---|---|
+| Frontend | React 19 + Vite + TypeScript (strict) |
+| Styling | Tailwind CSS v4 |
+| Routing | React Router v7 |
+| Data fetching | TanStack Query v5 |
+| Backend / Auth / DB | Supabase (PostgreSQL + Auth + Storage) |
+| Export | SheetJS (client-side `.xlsx`) |
+| Testing | Jest 30 + Testing Library + Playwright |
+| Hosting | Vercel |
 
 ---
 
