@@ -9,32 +9,46 @@
 -- Ayesha:  00000000-0000-0000-0000-000000000004  (0 receipts)
 
 insert into auth.users
-  (id, email, encrypted_password, email_confirmed_at, raw_user_meta_data)
+  (id, instance_id, email, aud, role, encrypted_password, email_confirmed_at,
+   raw_user_meta_data, confirmation_token, recovery_token, email_change, email_change_token_new,
+   created_at, updated_at)
 values
   ('00000000-0000-0000-0000-000000000001',
-   'zanele.d@example.com',
+   '00000000-0000-0000-0000-000000000000',
+   'zanele.d@example.com', 'authenticated', 'authenticated',
    -- password set by seed.js
    '',
    now(),
-   '{"is_18_or_older":true,"display_name":"Zanele Dlamini"}'::jsonb),
+   '{"is_18_or_older":true,"display_name":"Zanele Dlamini"}'::jsonb,
+   '', '', '', '',
+   now(), now()),
 
   ('00000000-0000-0000-0000-000000000002',
-   'mpho.s@example.com',
+   '00000000-0000-0000-0000-000000000000',
+   'mpho.s@example.com', 'authenticated', 'authenticated',
    '',
    now(),
-   '{"is_18_or_older":true,"display_name":"Mpho Sithole"}'::jsonb),
+   '{"is_18_or_older":true,"display_name":"Mpho Sithole"}'::jsonb,
+   '', '', '', '',
+   now(), now()),
 
   ('00000000-0000-0000-0000-000000000003',
-   'thabo.m@example.com',
+   '00000000-0000-0000-0000-000000000000',
+   'thabo.m@example.com', 'authenticated', 'authenticated',
    '',
    now(),
-   '{"is_18_or_older":true,"display_name":"Thabo Mokoena"}'::jsonb),
+   '{"is_18_or_older":true,"display_name":"Thabo Mokoena"}'::jsonb,
+   '', '', '', '',
+   now(), now()),
 
   ('00000000-0000-0000-0000-000000000004',
-   'ayesha.p@example.com',
+   '00000000-0000-0000-0000-000000000000',
+   'ayesha.p@example.com', 'authenticated', 'authenticated',
    '',
    now(),
-   '{"is_18_or_older":true,"display_name":"Ayesha Patel"}'::jsonb);
+   '{"is_18_or_older":true,"display_name":"Ayesha Patel"}'::jsonb,
+   '', '', '', '',
+   now(), now());
 
 -- handle_new_user trigger creates the public.users rows automatically
 
