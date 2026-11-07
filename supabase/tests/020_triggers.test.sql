@@ -41,6 +41,7 @@ select throws_ok(
   $$insert into auth.users (id, email, raw_user_meta_data, encrypted_password, email_confirmed_at)
     values ('44444444-4444-4444-4444-444444444444', 'young@example.com',
             '{"is_18_or_older":false}'::jsonb, 'x', now())$$,
+  NULL, NULL,
   'T-DB-3 is_18_or_older=false rejected'
 );
 

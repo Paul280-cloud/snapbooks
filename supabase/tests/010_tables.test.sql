@@ -1,6 +1,6 @@
 -- T-DB-1, T-DB-4, T-DB-5
 begin;
-select plan(28);
+select plan(25);
 
 -- T-DB-1: users table structure
 select has_table('public', 'users', 'T-DB-1 users table exists');

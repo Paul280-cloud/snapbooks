@@ -33,7 +33,8 @@ security invoker
 set search_path = ''
 as $$
 begin
-  new.updated_at := now();
+  -- clock_timestamp() is wall-clock time, unlike now() which is constant per transaction
+  new.updated_at := clock_timestamp();
   return new;
 end;
 $$;

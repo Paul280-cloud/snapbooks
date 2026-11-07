@@ -698,7 +698,7 @@ All tests in this phase are pgTAP tests in `supabase/tests/`.
 **Step 4: Refactor and full check**
 
 - [x] Every function has `set search_path = ''`. Only `handle_new_user` is `security definer`.
-- [x] `npm test` 60/60 passes. `npm run typecheck` passes. `npx supabase test db` and `npm run test:integration` blocked by Docker.
+- [x] `npm test` 60/60 passes. `npm run typecheck` passes. `npx supabase test db` 90/90 passes. `npm run test:integration` blocked (requires running app).
 
 **Step 5: Manual checks (human)**
 
@@ -709,7 +709,7 @@ All tests in this phase are pgTAP tests in `supabase/tests/`.
 **Definition of Done**
 
 - [x] All Phase 2 test files written; all Phase 1 tests (60) still pass. pgTAP tests require Docker.
-- [ ] Reset and seed verified from scratch with the two commands (requires Docker).
+- [x] Reset and seed verified from scratch with the two commands (`npx supabase db reset` and `npx supabase test db` — 90/90 pass).
 - [ ] Manual checks are ticked by the human.
 - [x] Progress log updated (Section 17).
 
@@ -1308,7 +1308,7 @@ All tests in this phase are pgTAP tests in `supabase/tests/`.
 | Phase | Date | Status | Automated tests (passed / total) | Commit | Notes |
 | --- | --- | --- | --- | --- | --- |
 | 1 | 6 Nov 2026 | Complete (manual checks pending) | Unit/component: 60/60 · E2E: 4/4 · DB: blocked (Docker required) · Integration: blocked (Docker required) | Phase 1: Foundation | Installed versions: react@19.3.1, vite@8.3.6, typescript@5.6.3, tailwindcss@4.3.4, react-router-dom@7.18.5, @tanstack/react-query@5.106.1, @supabase/supabase-js@2.119.0, jest@30.5.2, ts-jest@29.4.15, @testing-library/react@16.3.3, @testing-library/jest-dom@7.0.1, @playwright/test@1.65.0, lucide-react@1.70.0. T-SETUP-2 (pgTAP) and T-SETUP-3 (integration) need Docker Desktop — not installed on this machine. |
-| 2 | 6 Nov 2026 | Complete (Docker required to run pgTAP tests; manual checks pending) | Unit/component: 60/60 (Phase 1 all pass) · pgTAP: written, requires Docker · Integration: blocked (Docker required) | Phase 2: Data and security | 5 pgTAP test files written (010–080). 4 migrations written (0001–0004): tables, triggers, RLS, storage. seed.sql + seed/seed.js + seed/README.md written. All functions use set search_path=''; only handle_new_user is security definer. |
+| 2 | 7 Nov 2026 | Complete (manual checks pending) | Unit/component: 60/60 (Phase 1 all pass) · pgTAP: 90/90 pass (8 files, 000–080) · Integration: blocked (requires running app) | Phase 2: Data and security | 5 pgTAP test files written (010–080). 4 migrations written (0001–0004): tables, triggers, RLS, storage. seed.sql + seed/seed.js + seed/README.md written. All functions use set search_path=''; only handle_new_user is security definer. Migration 0003 revokes table-level UPDATE from authenticated before granting column-level only (Supabase default grants would otherwise override). set_updated_at trigger uses clock_timestamp() so updated_at > created_at within the same transaction. |
 
 ---
 

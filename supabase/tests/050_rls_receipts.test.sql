@@ -1,29 +1,22 @@
 -- T-SEC-4a/b, T-SEC-5a/b, T-SEC-6a/b, T-SEC-7a/b
 begin;
-select plan(14);
+select plan(13);
 
--- seed two users
+-- seed users already exist from seed.sql — no DO block needed
+
+-- insert test receipts as superuser (bypasses RLS)
 do $$
 begin
-  insert into auth.users (id, email, raw_user_meta_data, encrypted_password, email_confirmed_at)
-  values
-    ('00000000-0000-0000-0000-000000000001', 'zanele.d@example.com',
-     '{"is_18_or_older":true}'::jsonb, 'x', now()),
-    ('00000000-0000-0000-0000-000000000002', 'mpho.s@example.com',
-     '{"is_18_or_older":true}'::jsonb, 'x', now());
-end;
-$$;
-
--- insert a receipt for Zanele as superuser (bypasses RLS)
-do $$
-declare rid uuid := 'cccccccc-cccc-cccc-cccc-cccccccccccc';
-begin
+  -- Zanele's test receipt (used for update/delete tests)
   insert into public.receipts (id, owner_id, photo_url, vendor, amount, date, category)
-  values (rid, '00000000-0000-0000-0000-000000000001',
+  values ('cccccccc-cccc-cccc-cccc-cccccccccccc',
+          '00000000-0000-0000-0000-000000000001',
           '00000000-0000-0000-0000-000000000001/r1.jpg',
           'Pick n Pay', 100.00, current_date, 'Food');
+  -- Mpho's test receipt (used to verify T-SEC-7b cannot delete)
   insert into public.receipts (id, owner_id, photo_url, vendor, amount, date, category)
-  values (gen_random_uuid(), '00000000-0000-0000-0000-000000000002',
+  values ('dddddddd-dddd-dddd-dddd-dddddddddddd',
+          '00000000-0000-0000-0000-000000000002',
           '00000000-0000-0000-0000-000000000002/r1.jpg',
           'Shoprite', 50.00, current_date, 'Food');
 end;
@@ -33,9 +26,9 @@ $$;
 set local role authenticated;
 set local "request.jwt.claims" to '{"sub":"00000000-0000-0000-0000-000000000001","role":"authenticated"}';
 
--- T-SEC-4a: Zanele can read her own receipts
+-- T-SEC-4a: Zanele can read her own receipts (check the specific test receipt by id)
 select is(
-  (select count(*)::int from public.receipts where owner_id = '00000000-0000-0000-0000-000000000001'),
+  (select count(*)::int from public.receipts where id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'),
   1,
   'T-SEC-4a owner can read own receipts'
 );
@@ -56,12 +49,13 @@ select lives_ok(
   'T-SEC-5a owner can insert own receipt'
 );
 
--- T-SEC-5b: Zanele cannot insert a receipt with Mpho's owner_id
+-- T-SEC-5b: Zanele cannot insert a receipt with Mpho's owner_id (with_check → throws)
 select throws_ok(
   $$insert into public.receipts (owner_id, photo_url, vendor, amount, date, category)
     values ('00000000-0000-0000-0000-000000000002',
             '00000000-0000-0000-0000-000000000002/r2.jpg',
             'BP', 200.00, current_date, 'Fuel')$$,
+  NULL, NULL,
   'T-SEC-5b cannot insert receipt with another user''s owner_id'
 );
 
@@ -72,7 +66,7 @@ select lives_ok(
   'T-SEC-6a owner can update own receipt fields'
 );
 
--- T-SEC-6b: Zanele cannot update Mpho's receipt
+-- T-SEC-6b: Zanele cannot update Mpho's receipt (RLS USING silently 0 rows)
 select is(
   (select count(*)::int from public.receipts
     where owner_id = '00000000-0000-0000-0000-000000000002'
@@ -81,7 +75,7 @@ select is(
   'T-SEC-6b update of another user''s receipt affects 0 rows'
 );
 
--- (attempt the update — it should silently affect 0 rows because RLS filters it)
+-- (attempt — silently affects 0 rows; RLS filters Mpho's receipts from Zanele's view)
 update public.receipts set vendor = 'Hacked'
   where owner_id = '00000000-0000-0000-0000-000000000002';
 
@@ -93,10 +87,11 @@ select is(
   'T-SEC-6b Mpho''s vendor unchanged after Zanele''s update attempt'
 );
 
--- T-SEC-6b: Zanele cannot update owner_id (no column grant)
+-- T-SEC-6b: Zanele cannot update owner_id (no column grant → throws)
 select throws_ok(
   $$update public.receipts set owner_id = '00000000-0000-0000-0000-000000000002'
     where id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'$$,
+  NULL, NULL,
   'T-SEC-6b cannot update owner_id (no column grant)'
 );
 
@@ -106,25 +101,23 @@ select lives_ok(
   'T-SEC-7a owner can delete own receipt'
 );
 
--- T-SEC-7b: Zanele cannot delete Mpho's receipt (delete affects 0 rows)
-do $$
-begin
-  delete from public.receipts where owner_id = '00000000-0000-0000-0000-000000000002';
-end;
-$$;
+-- T-SEC-7b: Zanele cannot delete Mpho's receipt (RLS USING silently 0 rows)
+-- verify as superuser that dddddddd still exists
+delete from public.receipts where owner_id = '00000000-0000-0000-0000-000000000002';
+reset role;
 select is(
-  (select count(*)::int from public.receipts where owner_id = '00000000-0000-0000-0000-000000000002'),
+  (select count(*)::int from public.receipts where id = 'dddddddd-dddd-dddd-dddd-dddddddddddd'),
   1,
   'T-SEC-7b Mpho''s receipt survives Zanele''s delete attempt'
 );
 
--- T-SEC-11b: anon gets no receipts
+-- T-SEC-11b: anon cannot access receipts (permission denied — all revoked)
 reset role;
 set local role anon;
-select is(
-  (select count(*)::int from public.receipts),
-  0,
-  'T-SEC-11b anon gets no rows from receipts'
+select throws_ok(
+  $$select count(*)::int from public.receipts$$,
+  NULL, NULL,
+  'T-SEC-11b anon cannot select from receipts'
 );
 
 -- T-SEC-11b: anon cannot insert
@@ -135,14 +128,15 @@ select throws_ok(
     values ('00000000-0000-0000-0000-000000000001',
             '00000000-0000-0000-0000-000000000001/anon.jpg',
             'Shop', 1.00, current_date, 'Food')$$,
+  NULL, NULL,
   'T-SEC-11b anon cannot insert receipts'
 );
 
--- T-SEC-11b: anon cannot read users
-select is(
-  (select count(*)::int from public.users),
-  0,
-  'T-SEC-11b anon gets no rows from users'
+-- T-SEC-11b: anon cannot read users (permission denied — all revoked)
+select throws_ok(
+  $$select count(*)::int from public.users$$,
+  NULL, NULL,
+  'T-SEC-11b anon cannot select from users'
 );
 
 select * from finish();

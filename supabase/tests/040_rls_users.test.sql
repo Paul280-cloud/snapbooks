@@ -2,17 +2,7 @@
 begin;
 select plan(8);
 
--- seed two users directly
-do $$
-begin
-  insert into auth.users (id, email, raw_user_meta_data, encrypted_password, email_confirmed_at)
-  values
-    ('00000000-0000-0000-0000-000000000001', 'zanele.d@example.com',
-     '{"is_18_or_older":true,"display_name":"Zanele Dlamini"}'::jsonb, 'x', now()),
-    ('00000000-0000-0000-0000-000000000002', 'mpho.s@example.com',
-     '{"is_18_or_older":true,"display_name":"Mpho Sithole"}'::jsonb, 'x', now());
-end;
-$$;
+-- seed users already exist from seed.sql — no DO block needed
 
 -- T-SEC-1a: Zanele can read her own row
 set local role authenticated;
@@ -38,36 +28,49 @@ select lives_ok(
 );
 
 -- T-SEC-2b: Zanele cannot update Mpho's display_name
-select throws_ok(
-  $$update public.users set display_name = 'Hacked' where id = '00000000-0000-0000-0000-000000000002'$$,
+-- RLS USING failure silently affects 0 rows — verify as superuser
+update public.users set display_name = 'Hacked' where id = '00000000-0000-0000-0000-000000000002';
+reset role;
+select isnt(
+  (select display_name from public.users where id = '00000000-0000-0000-0000-000000000002'),
+  'Hacked',
   'T-SEC-2b owner cannot update another user''s display_name'
 );
+
+-- resume as Zanele
+set local role authenticated;
+set local "request.jwt.claims" to '{"sub":"00000000-0000-0000-0000-000000000001","role":"authenticated"}';
 
 -- T-SEC-2b: Zanele cannot update her own email (only display_name column grant)
 select throws_ok(
   $$update public.users set email = 'z@example.com' where id = '00000000-0000-0000-0000-000000000001'$$,
+  NULL, NULL,
   'T-SEC-2b cannot update email (no column grant)'
 );
 
--- T-SEC-2b: Zanele cannot update is_18_or_older
+-- T-SEC-2b: Zanele cannot update is_18_or_older (no column grant)
 select throws_ok(
   $$update public.users set is_18_or_older = false where id = '00000000-0000-0000-0000-000000000001'$$,
+  NULL, NULL,
   'T-SEC-2b cannot update is_18_or_older (no column grant)'
 );
 
--- T-SEC-3 (via SEC3 no delete policy): Zanele cannot delete her own row via table delete
-select throws_ok(
-  $$delete from public.users where id = '00000000-0000-0000-0000-000000000001'$$,
-  'T-SEC-3 authenticated role has no delete policy on users'
+-- T-SEC-3: Zanele cannot delete her own row (no DELETE policy → silently 0 rows)
+-- verify row still exists as superuser
+delete from public.users where id = '00000000-0000-0000-0000-000000000001';
+reset role;
+select is(
+  (select count(*)::int from public.users where id = '00000000-0000-0000-0000-000000000001'),
+  1,
+  'T-SEC-3 authenticated role has no delete policy on users — row survives'
 );
 
--- T-SEC-11b: anon role gets nothing from users
-reset role;
+-- T-SEC-11b: anon role cannot access users table (permission denied — all revoked)
 set local role anon;
-select is(
-  (select count(*)::int from public.users),
-  0,
-  'T-SEC-11b anon gets no rows from users'
+select throws_ok(
+  $$select count(*)::int from public.users$$,
+  NULL, NULL,
+  'T-SEC-11b anon cannot select from users'
 );
 
 select * from finish();

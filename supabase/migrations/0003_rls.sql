@@ -18,6 +18,9 @@ create policy users_select_own on public.users
   using (id = auth.uid());
 
 -- SEC2: users — update display_name only (column-level grant, own row only)
+-- Revoke table-level UPDATE first; Supabase default grants give authenticated UPDATE on all tables,
+-- which would override column-level grants if left in place.
+revoke update on public.users from authenticated;
 grant update (display_name) on public.users to authenticated;
 
 create policy users_update_own on public.users
@@ -42,6 +45,8 @@ create policy receipts_insert_own on public.receipts
   with check (owner_id = auth.uid());
 
 -- SEC6: receipts — update vendor/amount/date/category on own rows only
+-- Revoke table-level UPDATE first (same reason as users above).
+revoke update on public.receipts from authenticated;
 grant update (vendor, amount, date, category) on public.receipts to authenticated;
 
 create policy receipts_update_own on public.receipts
