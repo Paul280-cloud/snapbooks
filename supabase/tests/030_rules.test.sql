@@ -1,6 +1,6 @@
 -- T-BR1-3, T-BR2-2, T-BR4-1, T-BR6-1, T-BR7-3
 begin;
-select plan(26);
+select plan(28);
 
 -- set up two test users (A fills to limit; B used for T-BR7-3)
 do $$
@@ -98,12 +98,26 @@ select lives_ok(
   'T-BR1-3 today date accepted'
 );
 
+-- T-BR1-3: past date accepted (validate_receipt_date only rejects future, not past)
+select lives_ok(
+  $$select pg_temp.ok_receipt('Shop', 10.00, current_date - 1, 'Food')$$,
+  'T-BR1-3 past date accepted'
+);
+
 -- T-BR1-3: missing vendor (NOT NULL) rejected
 select throws_ok(
   $$insert into public.receipts (owner_id, photo_url, amount, date, category)
     values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
             'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/r.jpg', 10.00, current_date, 'Food')$$,
   NULL, NULL, 'T-BR1-3 missing vendor rejected'
+);
+
+-- T-BR1-3: missing category (NOT NULL, no default) rejected
+select throws_ok(
+  $$insert into public.receipts (owner_id, photo_url, vendor, amount, date)
+    values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+            'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/r.jpg', 'Shop', 10.00, current_date)$$,
+  NULL, NULL, 'T-BR1-3 missing category rejected'
 );
 
 -- T-BR2-2: invalid category rejected

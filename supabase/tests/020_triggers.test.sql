@@ -16,14 +16,18 @@ do $$
 declare
   uid uuid := '33333333-3333-3333-3333-333333333333';
   rid uuid := gen_random_uuid();
+  orig_created_at timestamptz;
 begin
   insert into public.receipts (id, owner_id, photo_url, vendor, amount, date, category)
   values (rid, uid, uid||'/r1.jpg', 'Pick n Pay', 100.00, current_date, 'Food');
+  -- capture created_at before the update
+  select created_at into orig_created_at from public.receipts where id = rid;
   -- small sleep to ensure updated_at advances
   perform pg_sleep(0.01);
   update public.receipts set vendor = 'Shoprite' where id = rid;
-  -- store for comparison in the select below
+  -- store both for comparison in the selects below
   perform set_config('test.rid', rid::text, true);
+  perform set_config('test.orig_created_at', orig_created_at::text, true);
 end;
 $$;
 
@@ -32,7 +36,8 @@ select ok(
   'T-DB-2 updated_at changes on update'
 );
 select ok(
-  (select created_at = created_at from public.receipts where id = current_setting('test.rid')::uuid),
+  (select created_at = current_setting('test.orig_created_at')::timestamptz
+     from public.receipts where id = current_setting('test.rid')::uuid),
   'T-DB-2 created_at is unchanged after update'
 );
 

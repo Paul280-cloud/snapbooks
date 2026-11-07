@@ -1,6 +1,6 @@
 -- T-SEC-4a/b, T-SEC-5a/b, T-SEC-6a/b, T-SEC-7a/b
 begin;
-select plan(13);
+select plan(14);
 
 -- seed users already exist from seed.sql — no DO block needed
 
@@ -93,6 +93,14 @@ select throws_ok(
     where id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'$$,
   NULL, NULL,
   'T-SEC-6b cannot update owner_id (no column grant)'
+);
+
+-- T-SEC-6b: Zanele cannot update photo_url (no column grant → throws)
+select throws_ok(
+  $$update public.receipts set photo_url = 'x'
+    where id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'$$,
+  NULL, NULL,
+  'T-SEC-6b cannot update photo_url (no column grant)'
 );
 
 -- T-SEC-7a: Zanele can delete her own receipt

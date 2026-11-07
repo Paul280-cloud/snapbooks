@@ -1,6 +1,6 @@
 -- T-DB-1, T-DB-4, T-DB-5
 begin;
-select plan(25);
+select plan(28);
 
 -- T-DB-1: users table structure
 select has_table('public', 'users', 'T-DB-1 users table exists');
@@ -13,6 +13,7 @@ select col_not_null('public', 'users', 'id',          'T-DB-1 users.id not null'
 select col_not_null('public', 'users', 'email',       'T-DB-1 users.email not null');
 select col_is_null( 'public', 'users', 'display_name','T-DB-1 users.display_name nullable');
 select col_not_null('public', 'users', 'is_18_or_older','T-DB-1 users.is_18_or_older not null');
+select col_not_null('public', 'users', 'created_at',    'T-DB-1 users.created_at not null');
 
 -- T-DB-1: receipts table structure
 select has_table('public', 'receipts', 'T-DB-1 receipts table exists');
@@ -25,6 +26,8 @@ select has_column('public', 'receipts', 'date',       'T-DB-1 receipts.date exis
 select has_column('public', 'receipts', 'category',   'T-DB-1 receipts.category exists');
 select has_column('public', 'receipts', 'created_at', 'T-DB-1 receipts.created_at exists');
 select has_column('public', 'receipts', 'updated_at', 'T-DB-1 receipts.updated_at exists');
+select col_type_is('public', 'receipts', 'amount', 'numeric(12,2)', 'T-DB-1 receipts.amount is numeric(12,2)');
+select col_type_is('public', 'receipts', 'date',   'date',          'T-DB-1 receipts.date is date');
 
 -- T-DB-1: handle_new_user creates users row with lower-case email
 do $$
