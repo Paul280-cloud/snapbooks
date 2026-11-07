@@ -68,3 +68,43 @@ describe('T-C-14 BarChart', () => {
     expect(document.querySelector('[data-testid="bar-Food"]')).toBeNull();
   });
 });
+
+// ─── Alignment and responsive layout (bug fixes) ─────────────────────────────
+
+describe('BarChart alignment', () => {
+  it('each bar and its label are in the same SVG element (not in a sibling div)', () => {
+    render(<BarChart items={ITEMS} title="Spend by category" />);
+    const bar = document.querySelector('[data-testid="bar-Food"]') as SVGRectElement;
+    expect(bar).not.toBeNull();
+    const svg = bar.closest('svg');
+    expect(svg).not.toBeNull();
+    // The 'Food' text must be inside the same SVG, not a sibling div
+    const textsInSvg = Array.from(svg!.querySelectorAll('text'));
+    expect(textsInSvg.some(t => t.textContent === 'Food')).toBe(true);
+  });
+
+  it('bar center-x and label center-x are equal within the SVG', () => {
+    render(<BarChart items={[{ label: 'Food', value: 100 }, { label: 'Fuel', value: 50 }]} title="Categories" />);
+    const bar = document.querySelector('[data-testid="bar-Food"]') as SVGRectElement;
+    const svg = bar.closest('svg')!;
+    const barCenterX = parseFloat(bar.getAttribute('x')!) + parseFloat(bar.getAttribute('width')!) / 2;
+    const labelEl = Array.from(svg.querySelectorAll('text')).find(t => t.textContent === 'Food');
+    expect(labelEl).toBeDefined();
+    expect(parseFloat(labelEl!.getAttribute('x')!)).toBeCloseTo(barCenterX, 0);
+  });
+
+  it('a 12-item chart is wrapped in an overflow-x-auto container', () => {
+    const twelveItems = Array.from({ length: 12 }, (_, i) => ({
+      label: `M${i}`,
+      value: i * 10,
+    }));
+    const { container } = render(<BarChart items={twelveItems} title="Months" />);
+    // The SVG must be inside a div with overflow-x-auto so it scrolls on small screens
+    expect(container.querySelector('.overflow-x-auto')).toBeInTheDocument();
+    // The SVG inside overflow-x-auto must be wider than a single-column viewport (> 300px)
+    const svgEl = container.querySelector('.overflow-x-auto svg') as SVGSVGElement | null;
+    expect(svgEl).not.toBeNull();
+    const svgWidth = parseFloat(svgEl!.getAttribute('width') ?? '0');
+    expect(svgWidth).toBeGreaterThan(300);
+  });
+});

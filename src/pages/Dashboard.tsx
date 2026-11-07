@@ -3,36 +3,13 @@ import { useSession } from '../hooks/useSession';
 import { fetchDashboardData, type DashboardRow } from '../lib/api/dashboard';
 import { taxYearFor } from '../lib/rules/taxYear';
 import { sumRand, formatRand } from '../lib/rules/money';
-import { CATEGORIES } from '../lib/rules/categories';
-import BarChart, { type BarChartItem } from '../components/BarChart';
+import {
+  formatTaxYearLabel,
+  computeCategoryTotals,
+  computeMonthTotals,
+} from '../lib/rules/dashboard';
+import BarChart from '../components/BarChart';
 import LoadingPlaceholder from '../components/LoadingPlaceholder';
-
-const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-function formatDateLabel(iso: string): string {
-  const [y, m, d] = iso.split('-').map(Number);
-  return `${d} ${MONTH_ABBR[m - 1]} ${y}`;
-}
-
-function computeCategoryTotals(rows: DashboardRow[]): BarChartItem[] {
-  return CATEGORIES.map(cat => ({
-    label: cat,
-    value: sumRand(rows.filter(r => r.category === cat).map(r => r.amount)),
-  }));
-}
-
-function computeMonthTotals(rows: DashboardRow[], start: string): BarChartItem[] {
-  const [startYear, startMonth] = start.split('-').map(Number);
-  return Array.from({ length: 12 }, (_, i) => {
-    const monthIndex = ((startMonth - 1 + i) % 12); // 0-based
-    const year = startYear + Math.floor((startMonth - 1 + i) / 12);
-    const mm = String(monthIndex + 1).padStart(2, '0');
-    const prefix = `${year}-${mm}-`;
-    const total = sumRand(rows.filter(r => r.date.startsWith(prefix)).map(r => r.amount));
-    return { label: MONTH_ABBR[monthIndex], value: total };
-  });
-}
 
 export default function Dashboard() {
   useSession();
@@ -52,7 +29,7 @@ export default function Dashboard() {
 
   useEffect(() => { load(); }, [load]);
 
-  const taxYearLabel = `${formatDateLabel(taxYear.start)} – ${formatDateLabel(taxYear.end)}`;
+  const taxYearLabel = formatTaxYearLabel(taxYear.start, taxYear.end);
 
   return (
     <div className="min-h-screen bg-[#F9FAFB]">
