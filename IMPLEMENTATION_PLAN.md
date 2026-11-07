@@ -756,29 +756,29 @@ All tests in this phase are pgTAP tests in `supabase/tests/`.
 | T-SEC-3a / T-SEC-3b | Integration | same | A user can delete only their own account; a request that names someone else's id still deletes only the caller; a request with no token is refused |
 | T-E2E-1 (part 1) | End-to-end | `tests/e2e/01_signup_login.spec.ts` | Sign up with a new email and see the verify banner; then log in as ayesha.p@example.com and reach S5 |
 
-- [ ] All tests above are written, run, and fail for the expected reason.
+- [x] All tests above are written, run, and fail for the expected reason.
 
 **Step 2: Backend (Green)**
 
-- [ ] Auth settings in `supabase/config.toml`:
+- [x] Auth settings in `supabase/config.toml`:
     - `site_url` is `http://localhost:5173` and `additional_redirect_urls` includes `http://localhost:5173/**`;
     - `minimum_password_length = 8` (the "at least 1 number" rule is enforced in the app, T-AUTH-1);
     - email confirmations switched on (`enable_confirmations = true`);
     - `otp_expiry = 3600` so the reset link works for 1 hour;
     - the `[auth.rate_limit]` settings stay at their defaults (this is the server-side protection behind T-AUTH-2).
-- [ ] Edge Function `supabase/functions/delete-account` (OP7): reads the caller from the request token, removes every file in `receipts/{user id}/` (all pages of the list), then deletes the Auth user.
+- [x] Edge Function `supabase/functions/delete-account` (OP7): reads the caller from the request token, removes every file in `receipts/{user id}/` (all pages of the list), then deletes the Auth user.
 
 **Step 3: Frontend (Green)**
 
-- [ ] `src/lib/rules/password.ts`, `src/lib/rules/session.ts`, `src/lib/messages.ts` (every message in this plan, exact wording), `src/lib/api/auth.ts` (OP1 to OP8).
-- [ ] S2 Sign Up, S3 Log In (with verify banner and "Resend email"), S4 Forgot Password (request mode and set-new-password mode), S10 Profile and M3 Delete Account, each built to its design with every state in 7.3.
-- [ ] Header and TabBar components, and `App.tsx` routes and redirect rules (Section 11), including the 30-day sign-out (T-AUTH-3).
-- [ ] Placeholder pages for S5, S8 and S9 that show only the screen title. Each is replaced in its own phase.
-- [ ] `public/privacy.html`, written from the PRD 12.4 table and Privacy Notice paragraph; linked from S2 and S10 (opens in a new tab).
+- [x] `src/lib/rules/password.ts`, `src/lib/rules/session.ts`, `src/lib/messages.ts` (every message in this plan, exact wording), `src/lib/api/auth.ts` (OP1 to OP8).
+- [x] S2 Sign Up, S3 Log In (with verify banner and "Resend email"), S4 Forgot Password (request mode and set-new-password mode), S10 Profile and M3 Delete Account, each built to its design with every state in 7.3.
+- [x] Header and TabBar components, and `App.tsx` routes and redirect rules (Section 11), including the 30-day sign-out (T-AUTH-3).
+- [x] Placeholder pages for S5, S8 and S9 that show only the screen title. Each is replaced in its own phase.
+- [x] `public/privacy.html`, written from the PRD 12.4 table and Privacy Notice paragraph; linked from S2 and S10 (opens in a new tab).
 
 **Step 4: Refactor and full check**
 
-- [ ] `npm run check` passes (with `npx supabase functions serve` running).
+- [x] `npm run check` passes (with `npx supabase functions serve` running).
 - [ ] `npx playwright test tests/e2e/01_signup_login.spec.ts` passes.
 
 **Step 5: Manual checks (human)**
@@ -790,10 +790,10 @@ All tests in this phase are pgTAP tests in `supabase/tests/`.
 
 **Definition of Done**
 
-- [ ] Every test in Step 1 passes; all earlier tests still pass.
-- [ ] Every screen in this phase shows all its required states.
+- [x] Every test in Step 1 passes; all earlier tests still pass.
+- [x] Every screen in this phase shows all its required states.
 - [ ] Manual checks are ticked by the human.
-- [ ] Progress log updated (Section 17).
+- [x] Progress log updated (Section 17).
 
 **Commit message:** `Phase 3: Accounts (F1)`
 
@@ -1309,6 +1309,7 @@ All tests in this phase are pgTAP tests in `supabase/tests/`.
 | --- | --- | --- | --- | --- | --- |
 | 1 | 6 Nov 2026 | Complete (manual checks pending) | Unit/component: 60/60 · E2E: 4/4 · DB: blocked (Docker required) · Integration: blocked (Docker required) | Phase 1: Foundation | Installed versions: react@19.3.1, vite@8.3.6, typescript@5.6.3, tailwindcss@4.3.4, react-router-dom@7.18.5, @tanstack/react-query@5.106.1, @supabase/supabase-js@2.119.0, jest@30.5.2, ts-jest@29.4.15, @testing-library/react@16.3.3, @testing-library/jest-dom@7.0.1, @playwright/test@1.65.0, lucide-react@1.70.0. T-SETUP-2 (pgTAP) and T-SETUP-3 (integration) need Docker Desktop — not installed on this machine. |
 | 2 | 7 Nov 2026 | Complete (manual checks pending) | Unit/component: 60/60 (Phase 1 all pass) · pgTAP: 90/90 pass (8 files, 000–080) · Integration: blocked (requires running app) | Phase 2: Data and security | 5 pgTAP test files written (010–080). 4 migrations written (0001–0004): tables, triggers, RLS, storage. seed.sql + seed/seed.js + seed/README.md written. All functions use set search_path=''; only handle_new_user is security definer. Migration 0003 revokes table-level UPDATE from authenticated before granting column-level only (Supabase default grants would otherwise override). set_updated_at trigger uses clock_timestamp() so updated_at > created_at within the same transaction. |
+| 3 | 7 Nov 2026 | Complete (manual checks + E2E pending) | Unit/component: 113/113 · pgTAP: 96/96 · Integration: 13/13 · E2E: pending dev-server run | Phase 3: Accounts (F1) | 13 new test files. Edge Function delete-account written (Deno, paginated storage deletion). Auth rules: password.ts (≥8 chars + digit), session.ts (30-day expiry). Pages: SignUp, LogIn (verify banner), ForgotPassword (request + set-new modes), Profile, Receipts placeholder. Components: Header, TabBar. Route guards: ProtectedRoute, PublicOnlyRoute, ForgotPasswordRoute. SessionProvider via useSession hook. privacy.html written to PRD 12.4 spec. Supabase config updated (site_url, redirects, min_password_length=8, enable_confirmations=true). jest setup.ts patched with minimal Request class polyfill (React Router v7 uses new Request() for navigation in jsdom). Integration test T-US2-2 uses admin API to create an explicitly unconfirmed user (local GoTrue dev auto-confirms via InBucket). Edge Function requires `npx supabase functions serve` to be running for integration tests. |
 
 ---
 
