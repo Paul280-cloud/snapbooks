@@ -27,6 +27,24 @@ export interface ListReceiptsResult {
   count: number;
 }
 
+export interface CreateReceiptParams {
+  vendor: string;
+  amount: number;
+  date: string;
+  category: Category;
+  photo_url: string;
+}
+
+export async function createReceipt(params: CreateReceiptParams): Promise<Receipt> {
+  const { data, error } = await supabase
+    .from('receipts')
+    .insert(params)
+    .select()
+    .single();
+  if (error) throw new Error(error.message);
+  return data as Receipt;
+}
+
 const PAGE_SIZE = 20;
 
 export async function listReceipts({

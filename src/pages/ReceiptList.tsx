@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { listReceipts } from '../lib/api/receipts';
 import { CATEGORIES } from '../lib/rules/categories';
@@ -10,11 +10,13 @@ import OfflineBanner from '../components/OfflineBanner';
 import LoadingPlaceholder from '../components/LoadingPlaceholder';
 
 export default function ReceiptList() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
   const [month, setMonth] = useState('');
   const isOnline = useOnlineStatus();
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const hasFilters = !!(search || category || month);
 
@@ -68,6 +70,13 @@ export default function ReceiptList() {
     setSearch('');
     setCategory('');
     setMonth('');
+  }
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) navigate('/receipts/new', { state: { file } });
+    // Reset so the same file can be selected again
+    e.target.value = '';
   }
 
   const uploadDisabled = atLimit || !isOnline;
@@ -153,24 +162,23 @@ export default function ReceiptList() {
 
           {/* Upload button */}
           <div className="mb-4 flex justify-end">
-            {uploadDisabled ? (
-              <span
-                role="link"
-                aria-label="Upload receipt"
-                aria-disabled="true"
-                className="inline-block cursor-not-allowed rounded-[6px] bg-gray-300 px-4 py-2 text-sm font-semibold text-gray-500"
-              >
-                + Upload receipt
-              </span>
-            ) : (
-              <Link
-                to="/receipts/new"
-                aria-label="Upload receipt"
-                className="inline-block rounded-[6px] bg-[#1B7F4F] px-4 py-2 text-sm font-semibold text-white hover:bg-[#166840]"
-              >
-                + Upload receipt
-              </Link>
-            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={handleFileSelect}
+              aria-hidden="true"
+            />
+            <button
+              type="button"
+              disabled={uploadDisabled}
+              aria-label="Upload receipt"
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-block rounded-[6px] bg-[#1B7F4F] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 hover:bg-[#166840]"
+            >
+              + Upload receipt
+            </button>
           </div>
 
           {/* Loading state */}

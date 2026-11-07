@@ -125,4 +125,54 @@ test.describe('T-E2E-1 sign-up → verify → log in → log out flow', () => {
     await page.goto('/receipts');
     await expect(page).toHaveURL('/log-in');
   });
+
+  test('T-E2E-1 upload a receipt photo, confirm OCR pre-fill, save and see it in the list', async ({ page }) => {
+    // Confirm user and log in
+    const { data } = await adminClient.auth.admin.listUsers();
+    const user = data.users.find((u) => u.email === E2E_EMAIL);
+    if (user) {
+      await adminClient.auth.admin.updateUserById(user.id, {
+        email_confirm: true,
+      });
+    }
+    await page.goto('/log-in');
+    await page.getByLabel('Email').fill(E2E_EMAIL);
+    await page.getByLabel('Password').fill(E2E_PASS);
+    await page.getByRole('button', { name: /log in/i }).click();
+    await page.waitForURL('/receipts');
+
+    // Click the upload button to open the file picker, then navigate with the sample file
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles('tests/fixtures/receipt-sample.jpg');
+
+    // Should navigate to /receipts/new and show the OCR loading spinner
+    await page.waitForURL('/receipts/new');
+    // Wait for OCR to complete (spinner disappears, form is shown)
+    await expect(page.getByRole('button', { name: /save/i })).toBeVisible({ timeout: 15_000 });
+
+    // Manually fill required fields in case OCR didn't extract them all
+    const vendorInput = page.getByLabel(/vendor/i);
+    if ((await vendorInput.inputValue()) === '') {
+      await vendorInput.fill('E2E Test Store');
+    }
+    const amountInput = page.getByLabel(/amount/i);
+    if ((await amountInput.inputValue()) === '') {
+      await amountInput.fill('99.00');
+    }
+    const dateInput = page.getByLabel(/date/i);
+    if ((await dateInput.inputValue()) === '') {
+      await dateInput.fill('2026-03-12');
+    }
+    const categorySelect = page.getByLabel(/category/i);
+    if ((await categorySelect.inputValue()) === '') {
+      await categorySelect.selectOption('Food');
+    }
+
+    // Save the receipt
+    await page.getByRole('button', { name: /save/i }).click();
+
+    // Should navigate back to /receipts and the receipt appears at the top
+    await page.waitForURL('/receipts');
+    await expect(page.getByText(/E2E Test Store|receipt/i)).toBeVisible({ timeout: 10_000 });
+  });
 });

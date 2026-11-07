@@ -192,8 +192,8 @@ describe('T-US4-3 empty state', () => {
         screen.getByText(/no receipts yet/i),
       ).toBeInTheDocument(),
     );
-    // The upload button is the top-level link (always present when not at limit / offline)
-    expect(screen.getAllByRole('link', { name: /upload/i }).length).toBeGreaterThanOrEqual(1);
+    // The upload button is always present when not at limit / offline
+    expect(screen.getByRole('button', { name: /upload/i })).toBeInTheDocument();
   });
 });
 
@@ -284,8 +284,8 @@ describe('T-S5-4 offline state', () => {
     mockListReceipts.mockResolvedValue({ receipts: makeReceipts(5), count: 5 });
     render(makeWrapper());
     await waitFor(() => expect(mockListReceipts).toHaveBeenCalled());
-    const uploadButton = screen.getByRole('link', { name: /upload/i });
-    expect(uploadButton).toHaveAttribute('aria-disabled', 'true');
+    const uploadButton = screen.getByRole('button', { name: /upload/i });
+    expect(uploadButton).toBeDisabled();
   });
 });
 
@@ -316,8 +316,8 @@ describe('T-EDGE-6 limit reached', () => {
         screen.getByText(/500-receipt limit/i),
       ).toBeInTheDocument(),
     );
-    const uploadButton = screen.getByRole('link', { name: /upload/i });
-    expect(uploadButton).toHaveAttribute('aria-disabled', 'true');
+    const uploadButton = screen.getByRole('button', { name: /upload/i });
+    expect(uploadButton).toBeDisabled();
   });
 
   it('existing receipts are still visible at the limit', async () => {

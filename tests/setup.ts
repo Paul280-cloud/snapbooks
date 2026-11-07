@@ -22,3 +22,15 @@ class _Request {
 (global as any).Request = _Request;
 
 import '@testing-library/jest-dom';
+
+// jsdom doesn't implement URL.createObjectURL / revokeObjectURL
+if (typeof URL.createObjectURL === 'undefined') {
+  Object.defineProperty(URL, 'createObjectURL', {
+    writable: true,
+    value: () => 'blob:mock',
+  });
+  Object.defineProperty(URL, 'revokeObjectURL', {
+    writable: true,
+    value: () => {},
+  });
+}
