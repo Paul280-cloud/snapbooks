@@ -5,7 +5,7 @@ jest.mock('../../src/hooks/useSession', () => ({
   useSession: jest.fn(),
 }));
 
-jest.mock('../../src/pages/Receipts', () => ({
+jest.mock('../../src/pages/ReceiptList', () => ({
   __esModule: true,
   default: () => <div data-testid="receipts-page" />,
 }));
@@ -30,6 +30,18 @@ jest.mock('../../src/pages/ForgotPassword', () => ({
   default: () => <div data-testid="forgot-page" />,
 }));
 
+jest.mock(
+  '../../src/pages/UploadReceipt',
+  () => ({ __esModule: true, default: () => <div data-testid="upload-page" /> }),
+  { virtual: true },
+);
+
+jest.mock(
+  '../../src/pages/EditReceipt',
+  () => ({ __esModule: true, default: () => <div data-testid="edit-receipt-page" /> }),
+  { virtual: true },
+);
+
 import { useSession as mockUseSessionFn } from '../../src/hooks/useSession';
 import App from '../../src/App';
 
@@ -52,6 +64,34 @@ function routerAt(path: string) {
     { initialEntries: [path] },
   );
 }
+
+describe('T-NAV-2 receipt sub-routes', () => {
+  beforeEach(() => mockUseSession.mockReset());
+
+  it('logged-in user can reach /receipts/new', () => {
+    loggedIn();
+    render(<RouterProvider router={routerAt('/receipts/new')} />);
+    expect(screen.getByTestId('upload-page')).toBeInTheDocument();
+  });
+
+  it('logged-in user can reach /receipts/:id', () => {
+    loggedIn();
+    render(<RouterProvider router={routerAt('/receipts/rec-1')} />);
+    expect(screen.getByTestId('edit-receipt-page')).toBeInTheDocument();
+  });
+
+  it('logged-out user at /receipts/new redirects to /log-in', () => {
+    loggedOut();
+    render(<RouterProvider router={routerAt('/receipts/new')} />);
+    expect(screen.getByTestId('log-in-page')).toBeInTheDocument();
+  });
+
+  it('logged-out user at /receipts/:id redirects to /log-in', () => {
+    loggedOut();
+    render(<RouterProvider router={routerAt('/receipts/rec-1')} />);
+    expect(screen.getByTestId('log-in-page')).toBeInTheDocument();
+  });
+});
 
 describe('T-NAV-1 route guards', () => {
   beforeEach(() => mockUseSession.mockReset());

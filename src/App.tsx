@@ -4,7 +4,9 @@ import Welcome from './pages/Welcome';
 import SignUp from './pages/SignUp';
 import LogIn from './pages/LogIn';
 import ForgotPassword from './pages/ForgotPassword';
-import Receipts from './pages/Receipts';
+import ReceiptList from './pages/ReceiptList';
+import UploadReceipt from './pages/UploadReceipt';
+import EditReceipt from './pages/EditReceipt';
 import Profile from './pages/Profile';
 
 function ProtectedRoute({ children }: { children: React.ReactElement }) {
@@ -56,7 +58,23 @@ export default function App() {
         path="/receipts"
         element={
           <ProtectedRoute>
-            <Receipts />
+            <ReceiptList />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/receipts/new"
+        element={
+          <ProtectedRoute>
+            <UploadReceipt />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/receipts/:id"
+        element={
+          <ProtectedRoute>
+            <EditReceipt />
           </ProtectedRoute>
         }
       />
