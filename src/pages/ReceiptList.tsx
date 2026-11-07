@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { listReceipts } from '../lib/api/receipts';
 import { CATEGORIES } from '../lib/rules/categories';
@@ -8,15 +8,21 @@ import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import ReceiptCard from '../components/ReceiptCard';
 import OfflineBanner from '../components/OfflineBanner';
 import LoadingPlaceholder from '../components/LoadingPlaceholder';
+import Toast from '../components/Toast';
 
 export default function ReceiptList() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
   const [month, setMonth] = useState('');
   const isOnline = useOnlineStatus();
   const sentinelRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [toast, setToast] = useState<string | null>(
+    (location.state as { toast?: string } | null)?.toast ?? null,
+  );
 
   const hasFilters = !!(search || category || month);
 
@@ -247,6 +253,8 @@ export default function ReceiptList() {
           <div ref={sentinelRef} className="h-1" aria-hidden="true" />
         </main>
       </div>
+
+      {toast && <Toast message={toast} onDismiss={() => setToast(null)} />}
     </div>
   );
 }

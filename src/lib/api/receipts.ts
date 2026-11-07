@@ -45,6 +45,61 @@ export async function createReceipt(params: CreateReceiptParams): Promise<Receip
   return data as Receipt;
 }
 
+export interface GetReceiptResult extends Receipt {
+  signed_url: string;
+}
+
+export async function getReceipt(id: string): Promise<GetReceiptResult | null> {
+  const { data, error } = await supabase
+    .from('receipts')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) return null;
+
+  const { data: urlData } = await supabase.storage
+    .from('receipts')
+    .createSignedUrl(data.photo_url, 3600);
+
+  return {
+    ...(data as Receipt),
+    signed_url: urlData?.signedUrl ?? '',
+  };
+}
+
+export interface UpdateReceiptParams {
+  vendor: string;
+  amount: number;
+  date: string;
+  category: Category;
+}
+
+export async function updateReceipt(id: string, params: UpdateReceiptParams): Promise<Receipt> {
+  const { data, error } = await supabase
+    .from('receipts')
+    .update(params)
+    .eq('id', id)
+    .select()
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error('Receipt not found');
+  return data as Receipt;
+}
+
+export async function deleteReceipt(id: string): Promise<void> {
+  const { data, error } = await supabase
+    .from('receipts')
+    .delete()
+    .eq('id', id)
+    .select('photo_url')
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (data?.photo_url) {
+    await supabase.storage.from('receipts').remove([data.photo_url]);
+  }
+}
+
 const PAGE_SIZE = 20;
 
 export async function listReceipts({

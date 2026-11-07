@@ -1,5 +1,5 @@
-// T-EDGE-3, T-BR4-3, T-INT-4
-// Integration tests for createReceipt via the Supabase client.
+// T-EDGE-3, T-BR4-3, T-INT-4, T-BR6-2, T-INT-5
+// Integration tests for receipt operations via the Supabase client.
 // Requires a running local Supabase instance (docker).
 // Run with: npm run test:int -- --testPathPattern=receipts.int
 
@@ -13,11 +13,15 @@ const admin = createClient(supabaseUrl, serviceKey, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
-const EMAIL_A = `int-receipt-a-${Date.now()}@example.com`;
+const ts = Date.now();
+const EMAIL_A = `int-receipt-a-${ts}@example.com`;
+const EMAIL_B = `int-receipt-b-${ts}@example.com`;
 const PASS = 'IntPass1!';
 
 let userAClient: ReturnType<typeof createClient>;
+let userBClient: ReturnType<typeof createClient>;
 let userAId: string;
+let userBId: string;
 
 async function signUpAndConfirm(email: string, pass: string) {
   const { data: signUpData, error: signUpErr } = await admin.auth.admin.createUser({
@@ -29,18 +33,26 @@ async function signUpAndConfirm(email: string, pass: string) {
   return signUpData.user!.id;
 }
 
-beforeAll(async () => {
-  userAId = await signUpAndConfirm(EMAIL_A, PASS);
-
-  userAClient = createClient(supabaseUrl, anonKey, {
+async function makeClient(email: string, pass: string) {
+  const client = createClient(supabaseUrl, anonKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
-  const { error } = await userAClient.auth.signInWithPassword({ email: EMAIL_A, password: PASS });
+  const { error } = await client.auth.signInWithPassword({ email, password: pass });
   if (error) throw error;
+  return client;
+}
+
+beforeAll(async () => {
+  userAId = await signUpAndConfirm(EMAIL_A, PASS);
+  userBId = await signUpAndConfirm(EMAIL_B, PASS);
+
+  userAClient = await makeClient(EMAIL_A, PASS);
+  userBClient = await makeClient(EMAIL_B, PASS);
 }, 30_000);
 
 afterAll(async () => {
   if (userAId) await admin.auth.admin.deleteUser(userAId);
+  if (userBId) await admin.auth.admin.deleteUser(userBId);
 }, 30_000);
 
 async function insertReceipt(client: ReturnType<typeof createClient>, overrides = {}) {
@@ -100,5 +112,107 @@ describe('T-EDGE-3 duplicate photo path', () => {
     // Expects a unique constraint violation
     expect(error).not.toBeNull();
     expect(error?.code).toMatch(/23505|unique/i);
+  });
+});
+
+describe('T-BR6-2 old receipts remain accessible', () => {
+  it('a receipt dated 6 years ago is still listed and can be updated and deleted', async () => {
+    const oldDate = '2020-01-15'; // 6+ years ago
+    const receipt = await insertReceipt(userAClient, {
+      vendor: 'Old Vendor',
+      date: oldDate,
+    });
+    expect(receipt.id).toBeTruthy();
+
+    // Still listed
+    const { data: listed } = await userAClient
+      .from('receipts')
+      .select('*')
+      .eq('id', receipt.id)
+      .single();
+    expect(listed?.date).toBe(oldDate);
+
+    // Can be updated (OP14)
+    const { error: updateErr } = await userAClient
+      .from('receipts')
+      .update({ vendor: 'Old Vendor Updated', amount: 50, date: oldDate, category: 'Other' })
+      .eq('id', receipt.id);
+    expect(updateErr).toBeNull();
+
+    // Can be deleted (OP15)
+    const { error: deleteErr } = await userAClient
+      .from('receipts')
+      .delete()
+      .eq('id', receipt.id);
+    expect(deleteErr).toBeNull();
+
+    // Gone after delete
+    const { data: gone } = await userAClient
+      .from('receipts')
+      .select('*')
+      .eq('id', receipt.id)
+      .maybeSingle();
+    expect(gone).toBeNull();
+  });
+});
+
+describe('T-INT-5 OP13/OP14/OP15 ownership enforcement', () => {
+  let ownerReceiptId: string;
+
+  beforeAll(async () => {
+    const r = await insertReceipt(userAClient, { vendor: 'Owner Receipt' });
+    ownerReceiptId = r.id;
+  });
+
+  it('OP13: owner can read their own receipt; other user gets nothing', async () => {
+    // Owner reads
+    const { data: own, error: ownErr } = await userAClient
+      .from('receipts')
+      .select('*')
+      .eq('id', ownerReceiptId)
+      .maybeSingle();
+    expect(ownErr).toBeNull();
+    expect(own?.vendor).toBe('Owner Receipt');
+
+    // Other user reads — RLS returns empty (not an error, just no rows)
+    const { data: other } = await userBClient
+      .from('receipts')
+      .select('*')
+      .eq('id', ownerReceiptId)
+      .maybeSingle();
+    expect(other).toBeNull();
+  });
+
+  it('OP14: other user cannot update the owner\'s receipt', async () => {
+    const { error } = await userBClient
+      .from('receipts')
+      .update({ vendor: 'Hacked' })
+      .eq('id', ownerReceiptId);
+    // RLS blocks the update — no rows affected, not an explicit error
+    expect(error).toBeNull(); // no SQL error, but...
+
+    // Verify the row was not changed
+    const { data } = await userAClient
+      .from('receipts')
+      .select('vendor')
+      .eq('id', ownerReceiptId)
+      .single();
+    expect(data?.vendor).toBe('Owner Receipt');
+  });
+
+  it('OP15: other user cannot delete the owner\'s receipt', async () => {
+    const { error } = await userBClient
+      .from('receipts')
+      .delete()
+      .eq('id', ownerReceiptId);
+    expect(error).toBeNull(); // RLS silently blocks, no SQL error
+
+    // Verify the row still exists for the owner
+    const { data } = await userAClient
+      .from('receipts')
+      .select('id')
+      .eq('id', ownerReceiptId)
+      .maybeSingle();
+    expect(data?.id).toBe(ownerReceiptId);
   });
 });

@@ -18,9 +18,12 @@ export default function ReceiptForm({
   disabled = false,
   errors,
 }: Props) {
+  const amountNum = parseFloat(values.amount);
   const allFilled =
     values.vendor.trim() !== '' &&
     values.amount !== '' &&
+    !isNaN(amountNum) &&
+    amountNum > 0 &&
     values.date !== '' &&
     values.category !== '';
 
