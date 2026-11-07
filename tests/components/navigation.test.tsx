@@ -42,6 +42,12 @@ jest.mock(
   { virtual: true },
 );
 
+jest.mock(
+  '../../src/pages/Export',
+  () => ({ __esModule: true, default: () => <div data-testid="export-page" /> }),
+  { virtual: true },
+);
+
 import { useSession as mockUseSessionFn } from '../../src/hooks/useSession';
 import App from '../../src/App';
 

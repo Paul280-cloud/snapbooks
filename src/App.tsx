@@ -8,6 +8,7 @@ import ReceiptList from './pages/ReceiptList';
 import UploadReceipt from './pages/UploadReceipt';
 import EditReceipt from './pages/EditReceipt';
 import Profile from './pages/Profile';
+import Export from './pages/Export';
 
 function ProtectedRoute({ children }: { children: React.ReactElement }) {
   const { session, loading } = useSession();
@@ -83,6 +84,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/export"
+        element={
+          <ProtectedRoute>
+            <Export />
           </ProtectedRoute>
         }
       />
