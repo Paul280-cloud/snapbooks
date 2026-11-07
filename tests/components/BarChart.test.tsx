@@ -107,4 +107,12 @@ describe('BarChart alignment', () => {
     const svgWidth = parseFloat(svgEl!.getAttribute('width') ?? '0');
     expect(svgWidth).toBeGreaterThan(300);
   });
+
+  it('the SVG width exceeds the last column right edge so labels are never clipped', () => {
+    // With 3 items × 48px col = 144px; SVG must be wider than 144 for right-edge padding
+    const { container } = render(<BarChart items={ITEMS} title="Categories" />);
+    const svgEl = container.querySelector('svg') as SVGSVGElement;
+    const svgWidth = parseFloat(svgEl.getAttribute('width')!);
+    expect(svgWidth).toBeGreaterThan(ITEMS.length * 48); // must exceed last column right edge
+  });
 });
