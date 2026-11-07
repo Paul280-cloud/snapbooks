@@ -12,6 +12,11 @@ export function parseAmount(raw: string): number | null {
   return val;
 }
 
+export function sumRand(amounts: number[]): number {
+  const cents = amounts.reduce((sum, a) => sum + Math.round(a * 100), 0);
+  return cents / 100;
+}
+
 export function formatRand(amount: number): string {
   const [intPart, decPart] = amount.toFixed(2).split('.');
   const withThousands = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');

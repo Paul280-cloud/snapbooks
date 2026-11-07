@@ -9,6 +9,7 @@ import UploadReceipt from './pages/UploadReceipt';
 import EditReceipt from './pages/EditReceipt';
 import Profile from './pages/Profile';
 import Export from './pages/Export';
+import Dashboard from './pages/Dashboard';
 
 function ProtectedRoute({ children }: { children: React.ReactElement }) {
   const { session, loading } = useSession();
@@ -92,6 +93,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <Export />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
           </ProtectedRoute>
         }
       />

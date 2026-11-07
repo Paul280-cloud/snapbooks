@@ -1,4 +1,4 @@
-import { formatRand, parseAmount } from '../../src/lib/rules/money';
+import { formatRand, parseAmount, sumRand } from '../../src/lib/rules/money';
 
 describe('T-BR7-1 formatRand', () => {
   it('formats 149 as "R 149.00"', () => {
@@ -65,5 +65,29 @@ describe('T-BR7-2 parseAmount', () => {
 
   it('returns null for zero', () => {
     expect(parseAmount('0')).toBeNull();
+  });
+});
+
+// ─── T-BR7-4 sumRand ──────────────────────────────────────────────────────────
+
+describe('T-BR7-4 sumRand', () => {
+  it('0.10 + 0.20 gives exactly 0.30 (not a floating-point artifact)', () => {
+    expect(sumRand([0.10, 0.20])).toBe(0.30);
+  });
+
+  it('ten times 0.10 gives exactly 1.00', () => {
+    expect(sumRand(Array(10).fill(0.10))).toBe(1.00);
+  });
+
+  it('returns 0 for an empty array', () => {
+    expect(sumRand([])).toBe(0);
+  });
+
+  it('handles whole numbers correctly', () => {
+    expect(sumRand([100, 200, 300])).toBe(600);
+  });
+
+  it('handles typical receipt amounts', () => {
+    expect(sumRand([149.99, 320.00, 89.50])).toBe(559.49);
   });
 });
