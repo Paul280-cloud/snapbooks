@@ -7,6 +7,7 @@ import { validateReceipt } from '../lib/rules/receipt';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { useSession } from '../hooks/useSession';
 import ReceiptForm from '../components/ReceiptForm';
+import OfflineBanner from '../components/OfflineBanner';
 import type { ReceiptFormData, ReceiptErrors } from '../lib/rules/receipt';
 import type { Category } from '../lib/rules/categories';
 
@@ -98,6 +99,8 @@ export default function UploadReceipt() {
 
   return (
     <div className="min-h-screen bg-[#F9FAFB]">
+      <OfflineBanner offline={!isOnline} />
+
       <header className="bg-white px-4 py-3 shadow-sm">
         <div className="mx-auto flex max-w-[1200px] items-center">
           <button

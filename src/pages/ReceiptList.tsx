@@ -9,6 +9,7 @@ import ReceiptCard from '../components/ReceiptCard';
 import OfflineBanner from '../components/OfflineBanner';
 import LoadingPlaceholder from '../components/LoadingPlaceholder';
 import Toast from '../components/Toast';
+import TabBar from '../components/TabBar';
 
 export default function ReceiptList() {
   const navigate = useNavigate();
@@ -255,6 +256,8 @@ export default function ReceiptList() {
       </div>
 
       {toast && <Toast message={toast} onDismiss={() => setToast(null)} />}
+
+      <TabBar />
     </div>
   );
 }

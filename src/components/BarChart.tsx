@@ -21,7 +21,7 @@ export default function BarChart({ items, title }: BarChartProps) {
   const maxValue = Math.max(...items.map(i => i.value), 0);
   // Give the SVG an explicit pixel width so it never shrinks on narrow screens.
   // The overflow-x-auto wrapper handles scrolling.
-  const svgWidth = Math.max(items.length * COL_W, COL_W);
+  const svgWidth = Math.max(items.length * COL_W, COL_W) + COL_W / 2;
 
   return (
     <figure aria-label={title} className="mb-6">

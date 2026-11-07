@@ -32,10 +32,17 @@ function makeRouter(loggedIn: boolean) {
 describe('TabBar (T-C-11)', () => {
   beforeEach(() => mockUseSession.mockReset());
 
-  it('shows Receipts and Home tabs when logged in', () => {
+  it('shows Receipts, Export, Dashboard and Profile tabs when logged in', () => {
     render(<RouterProvider router={makeRouter(true)} />);
     expect(screen.getByRole('link', { name: /receipts/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /home/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /export/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /dashboard/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /profile/i })).toBeInTheDocument();
+  });
+
+  it('tab bar nav has aria-label "Main navigation"', () => {
+    render(<RouterProvider router={makeRouter(true)} />);
+    expect(screen.getByRole('navigation', { name: /main navigation/i })).toBeInTheDocument();
   });
 
   it('renders nothing when logged out', () => {

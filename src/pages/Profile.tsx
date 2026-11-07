@@ -2,10 +2,14 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../components/Button';
 import ConfirmModal from '../components/ConfirmModal';
+import OfflineBanner from '../components/OfflineBanner';
+import TabBar from '../components/TabBar';
 import { logOut, deleteAccount, getProfile } from '../lib/api/auth';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
 
 export default function Profile() {
   const navigate = useNavigate();
+  const isOnline = useOnlineStatus();
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [email, setEmail] = useState('');
   const [showConfirm, setShowConfirm] = useState(false);
@@ -36,7 +40,9 @@ export default function Profile() {
   }
 
   return (
-    <div className="mx-auto max-w-sm px-4 py-12">
+    <div className="min-h-screen bg-[#F9FAFB]">
+      <OfflineBanner offline={!isOnline} />
+    <div className="mx-auto max-w-sm px-4 py-12 pb-20">
       <h1 className="mb-6 text-2xl font-bold text-[#111827]">Profile</h1>
       {displayName && (
         <p className="mb-1 text-lg font-semibold text-[#111827]">
@@ -69,6 +75,8 @@ export default function Profile() {
           onCancel={() => setShowConfirm(false)}
         />
       )}
+    </div>
+      <TabBar />
     </div>
   );
 }

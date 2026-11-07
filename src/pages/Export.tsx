@@ -11,6 +11,7 @@ import {
 import { taxYearFor } from '../lib/rules/taxYear';
 import OfflineBanner from '../components/OfflineBanner';
 import Toast from '../components/Toast';
+import TabBar from '../components/TabBar';
 
 export default function Export() {
   const isOnline = useOnlineStatus();
@@ -113,6 +114,8 @@ export default function Export() {
       </main>
 
       {toast && <Toast message={toast} onDismiss={() => setToast(null)} />}
+
+      <TabBar />
     </div>
   );
 }
